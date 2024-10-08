@@ -1,0 +1,21 @@
+#!/bin/bash
+#This is a config file, sourced by cginstall.sh script
+
+#Returns current branch of git repo. Works only when PWD inside a repository
+function git.branch {
+  br=`git branch | grep "*"`
+  echo ${br/* /}
+}
+
+GIT_BRANCH=$(git.branch)
+if [ -z $GIT_BRANCH ]; then
+  echo "ERROR: No current branch found. Exitting."
+  popd > /dev/null
+  exit 1
+fi
+MRP_REMOTE_BRANCH=$GIT_BRANCH
+
+MRP_INSTALL_PATH=/cg/tools/puzzle-products-importer
+mkdir -p $MRP_INSTALL_PATH
+MRP_SOURCE_PATH=$(pwd)
+MRP_EXCLUDE_MASKS=".git* *.pyc .mrp-install .project .pydevproject .settings Makefile *.ui *.qrc doc config.dox .idea* .vscode README* .mypy_cache* .env* test.py queries.graphql schema.graphql pyproject.toml .graphqlrc.yml __pycache__"

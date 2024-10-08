@@ -1,0 +1,65 @@
+# Fetch domains
+query GetDomains {
+  domains {
+    id
+    name
+  }
+}
+
+# Login mutation
+mutation Login($domainId: Int!, $username: String!, $password: String!) {
+  login(domainId: $domainId, username: $username, password: $password) {
+    id
+    nbf
+    exp
+  }
+}
+
+# Fetch projects
+query GetProjects {
+  projects {
+    id
+    code
+    title
+    doneAt
+  }
+}
+
+# Fetch product descendants (used in check_if_exists)
+query GetProductDescendants($projectId: UUID!, $ancestorIds: [UUID!]!, $maxDepth: Int) {
+  productDescendants(
+    projectId: $projectId,
+    ancestorIds: $ancestorIds,
+    includeAncestors: true,
+    filter: { tagsInclude: [], tagsExclude: [] },
+    maxDepth: $maxDepth
+  ) {
+    kind
+    id
+    code
+    parentId
+  }
+}
+
+# Create product group
+mutation CreateProductGroup($product: ProductAdd!) {
+  productCreate(product: $product) {
+    id
+  }
+}
+
+# Create product
+mutation CreateProduct($product: ProductAdd!) {
+  productCreate(product: $product) {
+    id
+  }
+}
+
+# Fetch whoami (optional, for debugging)
+query WhoAmI {
+  whoami {
+    id
+    nbf
+    exp
+  }
+}
