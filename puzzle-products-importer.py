@@ -227,11 +227,12 @@ class PuzzleUploaderUI(QWidget):
     @asyncSlot()
     async def attempt_login(self):
         """Attempts to log in using the generated GraphQL client."""
-        domain_id = self.domain_combo.currentData()
+        print (self.domain_combo.currentText())
+        domain_name = self.domain_combo.currentText()
         username = self.login_input.text().strip()
         password = self.password_input.text()
 
-        if not all([domain_id, username, password]):
+        if not all([domain_name, username, password]):
             self.login_status_label.setText("Please provide domain, login, and password.")
             logging.warning("Login failed: Missing credentials.")
             return
@@ -239,7 +240,7 @@ class PuzzleUploaderUI(QWidget):
         self.login_status_label.setText(f"Attempting login to {self.domain_combo.currentText()}...")
 
         try:
-            response = await self.client.login(int(domain_id), username, password)
+            response = await self.client.login(domain_name=domain_name, username=username, password=password)
 
             if response.login:
                 logging.info("Login successful.")

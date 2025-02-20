@@ -13,6 +13,7 @@ from .enums import (
     ProductsOrderField,
     ProductStatusEnum,
     ReportsOrderField,
+    SprintsOrderField,
     UserRole,
 )
 
@@ -24,11 +25,6 @@ class AssignmentAdd(BaseModel):
 
 class AssignmentChange(BaseModel):
     hours_in_day: Optional[int] = Field(alias="hoursInDay", default=None)
-
-
-class AuditUserTeamChange(BaseModel):
-    joined_at: Optional[Any] = Field(alias="joinedAt", default=None)
-    team_id: Optional[Any] = Field(alias="teamId", default=None)
 
 
 class ChunksChange(BaseModel):
@@ -44,6 +40,11 @@ class ChunksOrder(BaseModel):
     ascending: bool
 
 
+class DateRange(BaseModel):
+    start: Any
+    end: Any
+
+
 class EpicAdd(BaseModel):
     project_id: Any = Field(alias="projectId")
     parent_id: Optional[Any] = Field(alias="parentId", default=None)
@@ -54,6 +55,7 @@ class EpicAdd(BaseModel):
     status: EpicStatusEnum
     users: List[Any]
     products: List[Any]
+    sprints: List[Any]
 
 
 class EpicChange(BaseModel):
@@ -65,6 +67,7 @@ class EpicChange(BaseModel):
     status: Optional[EpicStatusEnum] = None
     users: Optional["UuidsUpdate"] = None
     products: Optional[List[Any]] = None
+    sprints: Optional["UuidsUpdate"] = None
 
 
 class EpicGroupAdd(BaseModel):
@@ -93,7 +96,7 @@ class PostAdd(BaseModel):
 
 
 class PostAddBlind(BaseModel):
-    user_id: Any = Field(alias="userId")
+    user_by: "UserBy" = Field(alias="userBy")
     project_code: str = Field(alias="projectCode")
     product_paths: List[str] = Field(alias="productPaths")
     description: Any
@@ -150,6 +153,7 @@ class ProductAdd(BaseModel):
     deliverable: Optional[bool] = None
     status: Optional[ProductStatusEnum] = None
     due_to: Optional[Any] = Field(alias="dueTo", default=None)
+    progress: Optional[float] = None
     estimation: Optional[int] = None
     tags: List[str]
 
@@ -162,6 +166,7 @@ class ProductChange(BaseModel):
     deliverable: Optional[bool] = None
     status: Optional[ProductStatusEnum] = None
     due_to: Optional[Any] = Field(alias="dueTo", default=None)
+    progress: Optional[float] = None
     estimation: Optional[int] = None
     tags: Optional["StringsUpdate"] = None
 
@@ -202,7 +207,7 @@ class ProjectAdd(BaseModel):
     description: Any
     estimation: Optional[int] = None
     thumbnail: Optional[Upload] = None
-    is_non_profit: bool = Field(alias="isNonProfit")
+    tags: List[str]
     done_at: Optional[Any] = Field(alias="doneAt", default=None)
 
 
@@ -212,7 +217,7 @@ class ProjectChange(BaseModel):
     description: Optional[Any] = None
     estimation: Optional[int] = None
     thumbnail: Optional[Upload] = None
-    is_non_profit: Optional[bool] = Field(alias="isNonProfit", default=None)
+    tags: Optional["StringsUpdate"] = None
     done_at: Optional[Any] = Field(alias="doneAt", default=None)
 
 
@@ -245,6 +250,76 @@ class ReportsOrder(BaseModel):
     ascending: bool
 
 
+class SpecialDayAdd(BaseModel):
+    day: Any
+    user_id: Any = Field(alias="userId")
+    kind: int
+    reason: Optional[str] = None
+
+
+class SpecialDayChange(BaseModel):
+    kind: int
+    reason: Optional[str] = None
+
+
+class SpecialDayInput(BaseModel):
+    user_id: Any = Field(alias="userId")
+    day: Any
+
+
+class SpecialDaysInput(BaseModel):
+    date_from: Optional[Any] = Field(alias="dateFrom", default=None)
+    date_to: Optional[Any] = Field(alias="dateTo", default=None)
+    user_ids: Optional[List[Any]] = Field(alias="userIds", default=None)
+
+
+class SprintAdd(BaseModel):
+    project_id: Any = Field(alias="projectId")
+    title: str
+    description: Any
+    progress: float
+    start_at: Any = Field(alias="startAt")
+    end_at: Any = Field(alias="endAt")
+    tags: List[str]
+    user_ids: List[Any] = Field(alias="userIds")
+    product_ids: List[Any] = Field(alias="productIds")
+    task_ids: List[Any] = Field(alias="taskIds")
+    epic_ids: List[Any] = Field(alias="epicIds")
+
+
+class SprintChange(BaseModel):
+    title: Optional[str] = None
+    description: Optional[Any] = None
+    progress: Optional[float] = None
+    start_at: Optional[Any] = Field(alias="startAt", default=None)
+    end_at: Optional[Any] = Field(alias="endAt", default=None)
+    tags: Optional["StringsUpdate"] = None
+    user_ids: Optional["UuidsUpdate"] = Field(alias="userIds", default=None)
+    product_ids: Optional[List[Any]] = Field(alias="productIds", default=None)
+    task_ids: Optional["UuidsUpdate"] = Field(alias="taskIds", default=None)
+    epic_ids: Optional["UuidsUpdate"] = Field(alias="epicIds", default=None)
+
+
+class SprintsFilter(BaseModel):
+    range: Optional["DateRange"] = None
+    project: Optional["SprintsProjectFilter"] = None
+    users: List[Any]
+    tags_include: List[str] = Field(alias="tagsInclude")
+    tags_exclude: List[str] = Field(alias="tagsExclude")
+    orders: List["SprintsOrder"]
+
+
+class SprintsOrder(BaseModel):
+    field: SprintsOrderField
+    ascending: bool
+
+
+class SprintsProjectFilter(BaseModel):
+    project_id: Any = Field(alias="projectId")
+    tasks: List[Any]
+    products: List[Any]
+
+
 class StringsAddRemove(BaseModel):
     add: List[str]
     remove: List[str]
@@ -265,6 +340,7 @@ class TaskAdd(BaseModel):
     users: List[Any]
     products: List[Any]
     tags: List[str]
+    sprints: List[Any]
 
 
 class TaskAssignAction(BaseModel):
@@ -287,6 +363,7 @@ class TaskChange(BaseModel):
     users: Optional["UuidsUpdate"] = None
     products: Optional[List[Any]] = None
     tags: Optional["StringsUpdate"] = None
+    sprints: Optional["UuidsUpdate"] = None
 
 
 class TaskGroupAdd(BaseModel):
@@ -306,20 +383,43 @@ class TaskGroupChange(BaseModel):
     estimation: Optional[int] = None
 
 
-class TeamChange(BaseModel):
-    name: Optional[str] = None
-    is_deleted: Optional[bool] = Field(alias="isDeleted", default=None)
-    users: Optional[List[Any]] = None
+class UserBy(BaseModel):
+    without_domain: Optional["UserWithoutDomain"] = Field(
+        alias="withoutDomain", default=None
+    )
+    with_domain: Optional["UserWithDomain"] = Field(alias="withDomain", default=None)
 
 
 class UserChange(BaseModel):
-    name: Optional[str] = None
-    role: Optional[UserRole] = None
+    given_name: Optional[str] = Field(alias="givenName", default=None)
+    family_name: Optional[str] = Field(alias="familyName", default=None)
+    login: Optional[str] = None
+    password: Optional[str] = None
+    roles: Optional["UserRolesUpdate"] = None
     avatar: Optional[Upload] = None
     is_deleted: Optional[bool] = Field(alias="isDeleted", default=None)
     team_id: Optional[Any] = Field(alias="teamId", default=None)
     timezone: Optional[str] = None
-    is_production: Optional[bool] = Field(alias="isProduction", default=None)
+    tags: Optional["StringsUpdate"] = None
+
+
+class UserRolesAddRemove(BaseModel):
+    add: List[UserRole]
+    remove: List[UserRole]
+
+
+class UserRolesUpdate(BaseModel):
+    set: Optional[List[UserRole]] = None
+    add_remove: Optional["UserRolesAddRemove"] = Field(alias="addRemove", default=None)
+
+
+class UserWithDomain(BaseModel):
+    domain_name: str = Field(alias="domainName")
+    guid: Any
+
+
+class UserWithoutDomain(BaseModel):
+    login: str
 
 
 class UuidsAddRemove(BaseModel):
@@ -333,8 +433,15 @@ class UuidsUpdate(BaseModel):
 
 
 EpicChange.model_rebuild()
+PostAddBlind.model_rebuild()
 PostsInputPagination.model_rebuild()
 ProductChange.model_rebuild()
+ProjectChange.model_rebuild()
+SprintChange.model_rebuild()
+SprintsFilter.model_rebuild()
 StringsUpdate.model_rebuild()
 TaskChange.model_rebuild()
+UserBy.model_rebuild()
+UserChange.model_rebuild()
+UserRolesUpdate.model_rebuild()
 UuidsUpdate.model_rebuild()

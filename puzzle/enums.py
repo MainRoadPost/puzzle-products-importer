@@ -54,6 +54,15 @@ class ReportsOrderField(str, Enum):
     UPDATED_AT = "UPDATED_AT"
 
 
+class SprintsOrderField(str, Enum):
+    TITLE = "TITLE"
+    START_AT = "START_AT"
+    END_AT = "END_AT"
+    COMPLETED = "COMPLETED"
+    CREATED_AT = "CREATED_AT"
+    UPDATED_AT = "UPDATED_AT"
+
+
 class TaskStatusEnum(str, Enum):
     BACKLOG = "BACKLOG"
     TODO = "TODO"
@@ -63,5 +72,7 @@ class TaskStatusEnum(str, Enum):
 
 
 class UserRole(str, Enum):
-    USER = "USER"
-    ADMIN = "ADMIN"
+    EDITOR = "EDITOR"
+    REPORTER = "REPORTER"
+    MANAGER = "MANAGER"
+    REPORT_AUDITOR = "REPORT_AUDITOR"

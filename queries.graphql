@@ -7,8 +7,8 @@ query GetDomains {
 }
 
 # Login mutation
-mutation Login($domainId: Int!, $username: String!, $password: String!) {
-  login(domainId: $domainId, username: $username, password: $password) {
+mutation Login($domainName: String, $username: String!, $password: String!) {
+  login(domainName: $domainName, username: $username, password: $password) {
     id
     nbf
     exp

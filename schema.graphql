@@ -1,233 +1,241 @@
 type Assignment {
-	taskId: UUID!
-	userId: UUID!
-	hoursInDay: Int
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	user: User!
+  taskId: UUID!
+  userId: UUID!
+  hoursInDay: Int
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  user: User!
 }
 
 input AssignmentAdd {
-	taskId: UUID!
-	userId: UUID!
+  taskId: UUID!
+  userId: UUID!
 }
 
 input AssignmentChange {
-	hoursInDay: Int
+  hoursInDay: Int
 }
 
 type AssignmentDeleted {
-	taskId: UUID!
-	userId: UUID!
+  taskId: UUID!
+  userId: UUID!
 }
 
 type AuditUserTeam {
-	userId: UUID!
-	joinedAt: NaiveDate!
-	teamId: UUID
-	user: User!
-	team: Team
+  userId: UUID!
+  until: NaiveDate!
+  teamId: UUID
+  user: User!
+  team: Team
 }
-
-input AuditUserTeamChange {
-	joinedAt: NaiveDate
-	teamId: UUID
-}
-
 
 interface Chunk {
-	projectId: UUID!
-	id: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	priority: Int!
-	estimation: Estimation
-	estimationSum: Estimation!
-	spentSum: Estimation!
-	childrenCount: Int!
-	depth: Int!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	parent: Chunk
-	project: Project!
-	createdBy: UUID!
-	updatedBy: UUID!
-	createdByUser: User!
-	updatedByUser: User!
+  projectId: UUID!
+  id: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  priority: Int!
+  estimation: Estimation
+  estimationSum: Estimation!
+  spentSum: Estimation!
+  childrenCount: Int!
+  depth: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  parent: Chunk
+  project: Project!
+  createdBy: UUID!
+  updatedBy: UUID!
+  createdByUser: User!
+  updatedByUser: User!
 }
 
 type ChunkDeleted {
-	id: UUID!
+  id: UUID!
 }
 
 type ChunkSpentReport {
-	reportDate: NaiveDate!
-	spentHours: Int!
-	rollingSum: Int!
-	users: [ChunkSpentUserReport!]!
+  reportDate: NaiveDate!
+  spentHours: Int!
+  rollingSum: Int!
+  users: [ChunkSpentUserReport!]!
 }
 
 type ChunkSpentUserReport {
-	userId: UUID!
-	spentHours: Int!
-	user: User!
+  userId: UUID!
+  spentHours: Int!
+  user: User!
 }
 
 input ChunksChange {
-	parentId: UUID
-	title: String
-	description: Delta
-	priority: Int
-	estimation: Int
+  parentId: UUID
+  title: String
+  description: Delta
+  priority: Int
+  estimation: Int
 }
 
 input ChunksOrder {
-	field: ChunksOrderField!
-	ascending: Boolean!
+  field: ChunksOrderField!
+  ascending: Boolean!
 }
 
 enum ChunksOrderField {
-	TITLE
-	ESTIMATION_SUM
-	SPENT_SUM
-	PRIORITY
-	STATUS
-	UPDATED_AT
+  TITLE
+  ESTIMATION_SUM
+  SPENT_SUM
+  PRIORITY
+  STATUS
+  UPDATED_AT
 }
 
 type Claims {
-	id: UUID!
-	"""
-	Not Before
-	"""
-	nbf: Timestamp!
-	"""
-	Expiration
-	"""
-	exp: Timestamp!
+  id: UUID!
+  """
+  Not Before
+  """
+  nbf: Timestamp!
+  """
+  Expiration
+  """
+  exp: Timestamp!
+}
+
+type Company {
+  id: Int!
+  name: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+input DateRange {
+  start: NaiveDate!
+  end: NaiveDate!
 }
 
 scalar Delta
 
 type Domain {
-	id: Int!
-	name: String!
-	defaultTimezone: String!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	deletedAt: Timestamp
+  id: Int!
+  name: String!
+  companyId: Int!
+  defaultTimezone: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
 }
 
 type Epic implements Chunk {
-	projectId: UUID!
-	id: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	estimation: Estimation
-	estimationSum: Estimation!
-	spentSum: Estimation!
-	childrenCount: Int!
-	depth: Int!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	priority: Int!
-	calcTaskStatus: TaskStatusEnum
-	epicStatus: EpicStatusEnum!
-	users: [User!]!
-	project: Project!
-	products: [Product!]!
-	parent: Chunk
-	createdBy: UUID!
-	updatedBy: UUID!
-	createdByUser: User!
-	updatedByUser: User!
+  projectId: UUID!
+  id: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  estimation: Estimation
+  estimationSum: Estimation!
+  spentSum: Estimation!
+  childrenCount: Int!
+  depth: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  priority: Int!
+  calcTaskStatus: TaskStatusEnum
+  epicStatus: EpicStatusEnum!
+  users: [User!]!
+  sprints: [Sprint!]!
+  project: Project!
+  products: [Product!]!
+  parent: Chunk
+  createdBy: UUID!
+  updatedBy: UUID!
+  createdByUser: User!
+  updatedByUser: User!
 }
 
 input EpicAdd {
-	projectId: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	estimation: Int
-	priority: Int
-	status: EpicStatusEnum!
-	users: [UUID!]!
-	products: [UUID!]!
+  projectId: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  estimation: Int
+  priority: Int
+  status: EpicStatusEnum!
+  users: [UUID!]!
+  products: [UUID!]!
+  sprints: [UUID!]!
 }
 
 input EpicChange {
-	parentId: UUID
-	title: String
-	description: Delta
-	estimation: Int
-	priority: Int
-	status: EpicStatusEnum
-	users: UuidsUpdate
-	products: [UUID!]
+  parentId: UUID
+  title: String
+  description: Delta
+  estimation: Int
+  priority: Int
+  status: EpicStatusEnum
+  users: UuidsUpdate
+  products: [UUID!]
+  sprints: UuidsUpdate
 }
 
 """
 Common data structures
 """
 type EpicGroup implements Chunk {
-	projectId: UUID!
-	id: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	estimation: Estimation
-	estimationSum: Estimation!
-	spentSum: Estimation!
-	childrenCount: Int!
-	depth: Int!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	priority: Int!
-	calcEpicStatus: EpicStatusEnum
-	calcTaskStatus: TaskStatusEnum
-	project: Project!
-	parent: Chunk
-	createdBy: UUID!
-	updatedBy: UUID!
-	createdByUser: User!
-	updatedByUser: User!
+  projectId: UUID!
+  id: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  estimation: Estimation
+  estimationSum: Estimation!
+  spentSum: Estimation!
+  childrenCount: Int!
+  depth: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  priority: Int!
+  calcEpicStatus: EpicStatusEnum
+  calcTaskStatus: TaskStatusEnum
+  project: Project!
+  parent: Chunk
+  createdBy: UUID!
+  updatedBy: UUID!
+  createdByUser: User!
+  updatedByUser: User!
 }
 
 input EpicGroupAdd {
-	projectId: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	priority: Int
-	estimation: Int
+  projectId: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  priority: Int
+  estimation: Int
 }
 
 input EpicGroupChange {
-	parentId: UUID
-	title: String
-	description: Delta
-	priority: Int
-	estimation: Int
+  parentId: UUID
+  title: String
+  description: Delta
+  priority: Int
+  estimation: Int
 }
 
 enum EpicStatusEnum {
-	BACKLOG
-	TODO
-	WIP
-	HOLD
-	DONE
-	OMIT
+  BACKLOG
+  TODO
+  WIP
+  HOLD
+  DONE
+  OMIT
 }
 
 """
 Represents Int32 (only positive part, used for time estimations)
 """
 scalar Estimation
-
-
-
 
 scalar ItemReactions
 
@@ -237,184 +245,237 @@ A scalar that can represent any JSON value.
 scalar JSON
 
 type Media {
-	id: UUID!
-	projectId: UUID!
-	postId: UUID!
-	filename: String!
-	hash: String!
-	hasThumbnail: Boolean!
-	hasSound: Boolean!
-	mimetype: String!
-	fps: Float
-	resolution: [Int!]
-	sortOrder: Int!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
+  id: UUID!
+  projectId: UUID!
+  postId: UUID!
+  filename: String!
+  hash: String!
+  hasThumbnail: Boolean!
+  hasSound: Boolean!
+  mimetype: String!
+  fps: Float
+  resolution: [Int!]
+  sortOrder: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  post: Post!
 }
 
 type MediaJob {
-	id: UUID!
-	projectId: UUID!
-	postId: UUID!
-	userId: UUID!
-	filename: String!
-	hash: String!
-	mimetype: String!
-	sortOrder: Int!
-	status: QueueStatus!
-	priority: Int!
-	source: String!
-	target: String!
-	startedAt: Timestamp!
-	duration: Float
-	error: String
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
+  id: UUID!
+  projectId: UUID!
+  postId: UUID!
+  userId: UUID!
+  filename: String!
+  hash: String!
+  mimetype: String!
+  sortOrder: Int!
+  status: QueueStatus!
+  priority: Int!
+  source: String!
+  target: String!
+  startedAt: Timestamp!
+  duration: Float
+  error: String
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
 }
 
 type MediaJobDeleted {
-	id: UUID!
+  id: UUID!
 }
 
-type MetricReport {
-	userId: UUID!
-	teamId: UUID
-	totalSpentHours: Float!
-	normalizedHours: Float!
-	productHierarchy: [UUID!]!
-	projectUuid: UUID!
-	user: User!
-	project: Project!
-	products: [Product!]!
+type MetricReports {
+  userId: UUID!
+  teamId: UUID
+  totalSpentHours: Float!
+  productHierarchy: [UUID!]!
+  projectUuid: UUID!
+  user: User!
+  team: Team
+  project: Project!
+  products: [Product!]!
+}
+
+type MetricSpecialDays {
+  userId: UUID!
+  teamId: UUID
+  totalSpecialDays: Int!
+  kindId: Int!
+  user: User!
+  team: Team
+  kind: SpecialDayKind!
 }
 
 type Mutation {
-	login(domainId: Int!, username: String!, password: String!): Claims!
-	logout: String!
-	userUpdate(id: UUID!, change: UserChange!): User!
-	teamCreate(name: String!): Team!
-	teamUpdate(id: UUID!, change: TeamChange!): Team!
-	assignmentCreate(assignment: AssignmentAdd!): Assignment!
-	assignmentUpdate(taskId: UUID!, userId: UUID!, change: AssignmentChange!): Assignment!
-	"""
-	Deletes assignment by it's id
-	
-	# Returns
-	() on success
-	
-	# Errors
-	
-	This function will return an error on any database error
-	"""
-	assignmentDelete(taskId: UUID!, userId: UUID!, spentHoursToday: Int!): Int!
-	reportCreate(report: ReportAdd!): Report
-	reportUpdate(input: ReportInput!, change: ReportChange!): Report
-	"""
-	Deletes report by it's id
-	
-	# Returns
-	1 on success, 0 if provided id wasn't found in database
-	
-	# Errors
-	
-	This function will return an error on any database error
-	"""
-	reportDelete(input: ReportInput!): Int!
-	projectCreate(project: ProjectAdd!): Project!
-	projectUpdate(id: UUID!, change: ProjectChange!): Project!
-	"""
-	Deletes project by it's id
-	
-	# Returns
-	1 on success, 0 if provided id wasn't found in database
-	
-	# Errors
-	
-	This function will return an error on any database error
-	"""
-	projectDelete(id: UUID!): Int!
-	productCreate(product: ProductAdd!): Product!
-	productsCommonUpdate(projectId: UUID!, ids: [UUID!]!, change: ProductCommonChange!): [Product!]!
-	productGroupsUpdate(projectId: UUID!, ids: [UUID!]!, change: ProductGroupChange!): [Product!]!
-	productsUpdate(projectId: UUID!, ids: [UUID!]!, change: ProductChange!): [Product!]!
-	"""
-	Deletes product by it's id
-	
-	# Returns
-	1 on success, 0 if provided id wasn't found in database
-	
-	# Errors
-	
-	This function will return an error on any database error
-	"""
-	productsDelete(projectId: UUID!, ids: [UUID!]!): Int!
-	epicGroupCreate(chunkToAdd: EpicGroupAdd!): EpicGroup!
-	epicGroupsUpdate(projectId: UUID!, ids: [UUID!]!, change: EpicGroupChange!): [EpicGroup!]!
-	epicCreate(chunkToAdd: EpicAdd!): Epic!
-	epicsUpdate(projectId: UUID!, ids: [UUID!]!, change: EpicChange!): [Epic!]!
-	taskGroupCreate(chunkToAdd: TaskGroupAdd!): TaskGroup!
-	taskGroupsUpdate(projectId: UUID!, ids: [UUID!]!, change: TaskGroupChange!): [TaskGroup!]!
-	taskCreate(chunkToAdd: TaskAdd!): Task!
-	tasksUpdate(projectId: UUID!, ids: [UUID!]!, change: TaskChange!): [Task!]!
-	taskChangeStatus(id: UUID!, status: TaskStatusEnum!, assignAction: TaskAssignAction): Task!
-	unfollowChunks(ids: [UUID!]!): [Chunk!]!
-	"""
-	Updates common part of chunks
-	"""
-	chunksUpdate(projectId: UUID!, ids: [UUID!]!, change: ChunksChange!): [Chunk!]!
-	"""
-	Deletes chunk by it's id
-	
-	# Returns
-	1 on success, 0 if provided id wasn't found in database
-	
-	# Errors
-	
-	This function will return an error on any database error
-	"""
-	chunksDelete(projectId: UUID!, ids: [UUID!]!): Int!
-	postCreate(postAdd: PostAdd!): Post!
-	postUpdate(postId: UUID!, change: PostChange!): Post!
-	"""
-	Deletes post by it's id
-	
-	# Returns
-	() on success
-	
-	# Errors
-	
-	This function will return an error on any database error
-	"""
-	postDelete(projectId: UUID!, id: UUID!): Int!
-	"""
-	Allows unauthorized users to create a post
-	"""
-	postCreateBlind(postAdd: PostAddBlind!): UUID!
-	"""
-	Deletes mediajob by it's id
-	
-	# Returns
-	1 on success, 0 if provided id wasn't found in database
-	
-	# Errors
-	
-	This function will return an error on any database error
-	"""
-	mediajobDelete(id: UUID!): Int!
-	auditUserTeamUpdate(userId: UUID!, joinedAt: NaiveDate!, change: AuditUserTeamChange!): User!
-	"""
-	Deletes audit_user_team by it's id
-	
-	# Returns
-	Updated user on success
-	
-	# Errors
-	
-	This function will return an error on any database error
-	"""
-	auditUserTeamDelete(userId: UUID!, joinedAt: NaiveDate!): User!
-	postAddReaction(projectId: UUID!, postId: UUID!, reaction: String!): Post!
-	postDeleteReaction(projectId: UUID!, postId: UUID!, reaction: String!): Post!
+  """
+  Logs in a user and returns it's claims (user id, expiration time, etc.).
+  """
+  login(domainName: String, username: String!, password: String!): Claims!
+  """
+  Logout a user.
+  """
+  logout: String!
+  userUpdate(id: UUID!, change: UserChange!): User!
+  assignmentCreate(assignment: AssignmentAdd!): Assignment!
+  assignmentUpdate(taskId: UUID!, userId: UUID!, change: AssignmentChange!): Assignment!
+  """
+  Deletes assignment by it's id
+
+  # Returns
+  () on success
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  assignmentDelete(taskId: UUID!, userId: UUID!, spentHoursToday: Int!): Int!
+  reportCreate(report: ReportAdd!): Report
+  reportUpdate(input: ReportInput!, change: ReportChange!): Report
+  """
+  Deletes report by it's id
+
+  # Returns
+  1 on success, 0 if provided id wasn't found in database
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  reportDelete(input: ReportInput!): Int!
+  projectCreate(project: ProjectAdd!): Project!
+  projectUpdate(id: UUID!, change: ProjectChange!): Project!
+  """
+  Deletes project by it's id
+
+  # Returns
+  1 on success, 0 if provided id wasn't found in database
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  projectDelete(id: UUID!): Int!
+  productCreate(product: ProductAdd!): Product!
+  productsCommonUpdate(projectId: UUID!, ids: [UUID!]!, change: ProductCommonChange!): [Product!]!
+  productGroupsUpdate(projectId: UUID!, ids: [UUID!]!, change: ProductGroupChange!): [Product!]!
+  productsUpdate(projectId: UUID!, ids: [UUID!]!, change: ProductChange!): [Product!]!
+  """
+  Deletes product by it's id
+
+  # Returns
+  1 on success, 0 if provided id wasn't found in database
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  productsDelete(projectId: UUID!, ids: [UUID!]!): Int!
+  epicGroupCreate(chunkToAdd: EpicGroupAdd!): EpicGroup!
+  epicGroupsUpdate(projectId: UUID!, ids: [UUID!]!, change: EpicGroupChange!): [EpicGroup!]!
+  epicCreate(chunkToAdd: EpicAdd!): Epic!
+  epicsUpdate(projectId: UUID!, ids: [UUID!]!, change: EpicChange!): [Epic!]!
+  taskGroupCreate(chunkToAdd: TaskGroupAdd!): TaskGroup!
+  taskGroupsUpdate(projectId: UUID!, ids: [UUID!]!, change: TaskGroupChange!): [TaskGroup!]!
+  taskCreate(chunkToAdd: TaskAdd!): Task!
+  tasksUpdate(projectId: UUID!, ids: [UUID!]!, change: TaskChange!): [Task!]!
+  taskChangeStatus(id: UUID!, status: TaskStatusEnum!, assignAction: TaskAssignAction): Task!
+  unfollowChunks(ids: [UUID!]!): [Chunk!]!
+  """
+  Updates common part of chunks
+  """
+  chunksUpdate(projectId: UUID!, ids: [UUID!]!, change: ChunksChange!): [Chunk!]!
+  """
+  Deletes chunk by it's id
+
+  # Returns
+  1 on success, 0 if provided id wasn't found in database
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  chunksDelete(projectId: UUID!, ids: [UUID!]!): Int!
+  postCreate(postAdd: PostAdd!): Post!
+  postUpdate(postId: UUID!, change: PostChange!): Post!
+  """
+  Deletes post by it's id
+
+  # Returns
+  () on success
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  postDelete(projectId: UUID!, id: UUID!): Int!
+  """
+  Allows users to create a post without authentication. This endpoint is intended for use with external bots that can generate posts automatically.
+  """
+  postCreateBlind(postAdd: PostAddBlind!): UUID!
+  """
+  Deletes mediajob by it's id
+
+  # Returns
+  1 on success, 0 if provided id wasn't found in database
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  mediajobDelete(id: UUID!): Int!
+  """
+  Adds a reaction to a post.
+
+  This will add a reaction to the database and publish the updated post
+  to all connected clients.
+
+  Requires authentication.
+
+  # Errors
+
+  * If no authenticated user is present, returns `InvalidRequest`.
+  """
+  postAddReaction(projectId: UUID!, postId: UUID!, reaction: String!): Post!
+  """
+  Deletes a reaction from a post.
+
+  This will delete a reaction from the database and publish the updated post
+  to all connected clients.
+
+  Requires authentication.
+
+  # Errors
+
+  * If no authenticated user is present, returns `InvalidRequest`.
+  """
+  postDeleteReaction(projectId: UUID!, postId: UUID!, reaction: String!): Post!
+  sprintCreate(sprintAdd: SprintAdd!): Sprint!
+  sprintUpdate(projectId: UUID!, ids: [UUID!]!, change: SprintChange!): [Sprint!]!
+  """
+  Deletes sprint by it's id
+
+  # Returns
+  1 on success, 0 if provided id wasn't found in database
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  sprintDelete(projectId: UUID!, ids: [UUID!]!): Int!
+  specialDayCreate(specialday: SpecialDayAdd!): SpecialDay
+  specialDayUpdate(input: SpecialDayInput!, change: SpecialDayChange!): SpecialDay
+  """
+  Deletes specialday by it's id
+
+  # Returns
+  1 on success, 0 if provided id wasn't found in database
+
+  # Errors
+
+  This function will return an error on any database error
+  """
+  specialDayDelete(input: SpecialDayInput!): Int!
 }
 
 """
@@ -429,559 +490,814 @@ Format: %Y-%m-%d
 scalar NaiveDate
 
 type Post {
-	id: UUID!
-	projectId: UUID!
-	description: Delta!
-	tags: [String!]!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	reactions: ItemReactions!
-	createdBy: UUID!
-	updatedBy: UUID!
-	media: [Media!]!
-	products: [Product!]!
-	project: Project!
-	createdByUser: User!
-	updatedByUser: User!
+  id: UUID!
+  projectId: UUID!
+  description: Delta!
+  tags: [String!]!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  reactions: ItemReactions!
+  createdBy: UUID!
+  updatedBy: UUID!
+  media: [Media!]!
+  products: [Product!]!
+  project: Project!
+  createdByUser: User!
+  updatedByUser: User!
 }
 
 input PostAdd {
-	projectId: UUID!
-	productIds: [UUID!]!
-	description: Delta!
-	tags: [String!]!
-	uploads: [Upload!]!
+  projectId: UUID!
+  productIds: [UUID!]!
+  description: Delta!
+  tags: [String!]!
+  uploads: [Upload!]!
 }
 
 input PostAddBlind {
-	userId: UUID!
-	projectCode: String!
-	productPaths: [String!]!
-	description: Delta!
-	tags: [String!]!
-	uploads: [Upload!]!
+  userBy: UserBy!
+  projectCode: String!
+  productPaths: [String!]!
+  description: Delta!
+  tags: [String!]!
+  uploads: [Upload!]!
 }
 
 input PostChange {
-	productIds: [UUID!]
-	description: Delta
-	tags: [String!]
-	uploads: [Upload!]!
-	deleteMedia: [UUID!]!
-	mediaOrder: [UUID!]!
+  productIds: [UUID!]
+  description: Delta
+  tags: [String!]
+  uploads: [Upload!]!
+  deleteMedia: [UUID!]!
+  mediaOrder: [UUID!]!
 }
 
 type PostDeleted {
-	id: UUID!
+  id: UUID!
 }
 
 input PostsCursor {
-	lastTime: Timestamp!
-	lastId: UUID!
+  lastTime: Timestamp!
+  lastId: UUID!
 }
 
 input PostsInputFilter {
-	projectId: UUID
-	productIds: [UUID!]!
-	chunkIds: [UUID!]!
-	userIds: [UUID!]!
-	description: String
-	postTagsInclude: [String!]
-	postTagsExclude: [String!]
-	productTagsInclude: [String!]
-	productTagsExclude: [String!]
+  projectId: UUID
+  productIds: [UUID!]!
+  chunkIds: [UUID!]!
+  userIds: [UUID!]!
+  description: String
+  postTagsInclude: [String!]
+  postTagsExclude: [String!]
+  productTagsInclude: [String!]
+  productTagsExclude: [String!]
 }
 
 input PostsInputPagination {
-	after: PostsCursor
-	limit: Int!
+  after: PostsCursor
+  limit: Int!
 }
 
 type Product {
-	projectId: UUID!
-	id: UUID!
-	parentId: UUID
-	code: String!
-	kind: ProductKind!
-	description: Delta!
-	thumbnail: String
-	deliverable: Boolean
-	status: ProductStatusEnum
-	dueTo: Timestamp
-	estimation: Int
-	estimationSum: Int!
-	spentSum: Float!
-	tags: [String!]!
-	depth: Int!
-	childrenCount: Int!
-	childrenGroupsCount: Int!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	createdBy: UUID!
-	updatedBy: UUID!
-	thumbnailPath: String
-	children: [Product!]!
-	"""
-	Returns materialized path of the product as ordered vector of ids af all it's ancestors including itself.
-	"""
-	path: [ProductAncestor!]!
-	createdByUser: User!
-	updatedByUser: User!
+  projectId: UUID!
+  id: UUID!
+  parentId: UUID
+  code: String!
+  kind: ProductKind!
+  description: Delta!
+  thumbnail: String
+  deliverable: Boolean
+  status: ProductStatusEnum
+  dueTo: Timestamp
+  progress: Float
+  estimation: Int
+  estimationSum: Int!
+  spentSum: Float!
+  tags: [String!]!
+  depth: Int!
+  childrenCount: Int!
+  childrenGroupsCount: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  createdBy: UUID!
+  updatedBy: UUID!
+  thumbnailPath: String
+  children: [Product!]!
+  """
+  Returns materialized path of the product as ordered vector of ids af all it's ancestors including itself.
+  """
+  path: [ProductAncestor!]!
+  createdByUser: User!
+  updatedByUser: User!
 }
 
 input ProductAdd {
-	projectId: UUID!
-	parentId: UUID
-	code: String!
-	kind: ProductKind!
-	description: Delta!
-	thumbnail: Upload
-	deliverable: Boolean
-	status: ProductStatusEnum
-	dueTo: Timestamp
-	estimation: Int
-	tags: [String!]!
+  projectId: UUID!
+  parentId: UUID
+  code: String!
+  kind: ProductKind!
+  description: Delta!
+  thumbnail: Upload
+  deliverable: Boolean
+  status: ProductStatusEnum
+  dueTo: Timestamp
+  progress: Float
+  estimation: Int
+  tags: [String!]!
 }
 
 type ProductAncestor {
-	id: UUID!
-	code: String!
+  id: UUID!
+  code: String!
 }
 
 input ProductChange {
-	parentId: UUID
-	code: String
-	description: Delta
-	thumbnail: Upload
-	deliverable: Boolean
-	status: ProductStatusEnum
-	dueTo: Timestamp
-	estimation: Int
-	tags: StringsUpdate
+  parentId: UUID
+  code: String
+  description: Delta
+  thumbnail: Upload
+  deliverable: Boolean
+  status: ProductStatusEnum
+  dueTo: Timestamp
+  progress: Float
+  estimation: Int
+  tags: StringsUpdate
 }
 
 input ProductCommonChange {
-	parentId: UUID
-	code: String
-	description: Delta
-	estimation: Int
+  parentId: UUID
+  code: String
+  description: Delta
+  estimation: Int
 }
 
 type ProductDeleted {
-	id: UUID!
+  id: UUID!
 }
 
 input ProductFilter {
-	description: String
-	tagsInclude: [String!]!
-	tagsExclude: [String!]!
+  description: String
+  tagsInclude: [String!]!
+  tagsExclude: [String!]!
 }
 
 input ProductGroupChange {
-	parentId: UUID
-	code: String
-	description: Delta
-	estimation: Int
+  parentId: UUID
+  code: String
+  description: Delta
+  estimation: Int
 }
 
 enum ProductKind {
-	GROUP
-	PRODUCT
+  GROUP
+  PRODUCT
 }
 
 type ProductSpentReport {
-	reportDate: NaiveDate!
-	spentHours: Float!
-	rollingSum: Float!
-	users: [ProductSpentUserReport!]!
+  reportDate: NaiveDate!
+  spentHours: Float!
+  rollingSum: Float!
+  users: [ProductSpentUserReport!]!
 }
 
 type ProductSpentUserReport {
-	userId: UUID!
-	spentHours: Float!
-	user: User!
+  userId: UUID!
+  spentHours: Float!
+  user: User!
 }
 
 type ProductStage {
-	projectId: UUID!
-	productId: UUID!
-	tags: [String!]!
-	taskStatus: TaskStatusEnum!
-	tasksCount: Int!
+  projectId: UUID!
+  productId: UUID!
+  tags: [String!]!
+  taskStatus: TaskStatusEnum!
+  tasksCount: Int!
 }
 
 enum ProductStatusEnum {
-	ACTIVE
-	COMPLETED
-	CANCELED
+  ACTIVE
+  COMPLETED
+  CANCELED
 }
 
 input ProductsOrder {
-	field: ProductsOrderField!
-	ascending: Boolean!
+  field: ProductsOrderField!
+  ascending: Boolean!
 }
 
 enum ProductsOrderField {
-	CODE
-	ESTIMATION_SUM
-	SPENT_SUM
-	STATUS
-	UPDATED_AT
+  CODE
+  ESTIMATION_SUM
+  SPENT_SUM
+  STATUS
+  UPDATED_AT
 }
 
 input ProductsStageFilter {
-	projectId: UUID!
-	products: [UUID!]!
+  projectId: UUID!
+  products: [UUID!]!
 }
 
 type Project {
-	id: UUID!
-	code: String!
-	title: String!
-	description: Delta!
-	estimation: Estimation
-	thumbnail: String
-	estimationChunkSum: Estimation!
-	estimationProductSum: Estimation!
-	spentSum: Estimation!
-	isNonProfit: Boolean!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	doneAt: Timestamp
-	createdBy: UUID!
-	updatedBy: UUID!
-	thumbnailPath: String
-	path: String!
-	createdByUser: User!
-	updatedByUser: User!
+  id: UUID!
+  code: String!
+  title: String!
+  description: Delta!
+  estimation: Estimation
+  thumbnail: String
+  estimationChunkSum: Estimation!
+  estimationProductSum: Estimation!
+  spentSum: Estimation!
+  tags: [String!]!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  doneAt: Timestamp
+  createdBy: UUID!
+  updatedBy: UUID!
+  thumbnailPath: String
+  path: String!
+  createdByUser: User!
+  updatedByUser: User!
 }
 
 input ProjectAdd {
-	code: String!
-	title: String!
-	description: Delta!
-	estimation: Int
-	thumbnail: Upload
-	isNonProfit: Boolean!
-	doneAt: Timestamp
+  code: String!
+  title: String!
+  description: Delta!
+  estimation: Int
+  thumbnail: Upload
+  tags: [String!]!
+  doneAt: Timestamp
 }
 
 input ProjectChange {
-	code: String
-	title: String
-	description: Delta
-	estimation: Int
-	thumbnail: Upload
-	isNonProfit: Boolean
-	doneAt: Timestamp
+  code: String
+  title: String
+  description: Delta
+  estimation: Int
+  thumbnail: Upload
+  tags: StringsUpdate
+  doneAt: Timestamp
 }
 
 type ProjectDeleted {
-	id: UUID!
+  id: UUID!
 }
 
 type ProjectSpentsRecord {
-	projectId: UUID!
-	spents: [SpentTimeRecord!]!
-	project: Project!
+  projectId: UUID!
+  spents: [SpentTimeRecord!]!
+  project: Project!
 }
 
 type ProjectsDistribution {
-	projects: [ProjectSpentsRecord!]!
-	start: NaiveDate
-	end: NaiveDate
+  projects: [ProjectSpentsRecord!]!
+  start: NaiveDate
+  end: NaiveDate
 }
 
 type Query {
-	whoami: Claims
-	userSummary(id: UUID!): [UserSummaryRecord!]!
-	strictWhoami: Claims
-	currentUser: User!
-	user(id: UUID!): User
-	users(active: Boolean): [User!]!
-	usersByIds(ids: [UUID!]!): [User!]!
-	team(id: UUID!): Team
-	teams(active: Boolean): [Team!]!
-	chunk(id: UUID!): Chunk!
-	chunksExpanded(projectId: UUID!, root: UUID, ids: [UUID!]!, products: [UUID!]!, users: [UUID!]!, hideDone: Boolean!, orders: [ChunksOrder!]!): [Chunk!]!
-	chunks(ids: [UUID!]!): [Chunk!]!
-	"""
-	Gets all ancestors for the given projects
-	
-	If `with_siblings` parameter is true:
-	* When `chunk_ids` array is empty, it returns all direct ancestors of project
-	* When `chunk_ids` array has elements, it will return all ancestors
-	of given chunks and all of their siblings, plus direct descendants of this project
-	
-	If with_siblings is false, it will return all ancestors for the given chunks.
-	"""
-	chunkAncestors(projectId: UUID!, chunkIds: [UUID!]!, withSiblings: Boolean!): [Chunk!]!
-	chunkDescendants(projectId: UUID!, ancestorIds: [UUID!]!, includeAncestors: Boolean!, maxDepth: Int): [Chunk!]!
-	productsStage(filter: ProductsStageFilter!, tagGroups: [[String!]!]!): [ProductStage!]!
-	report(where: ReportInput!): Report!
-	reports(where: ReportsInput!, order: ReportsOrder): [Report!]!
-	project(id: UUID!): Project!
-	projects(active: Boolean): [Project!]!
-	product(id: UUID!): Product!
-	products(ids: [UUID!]!): [Product!]!
-	productsExpanded(projectId: UUID!, root: UUID, ids: [UUID!]!, description: String, tagsInclude: [String!]!, tagsExclude: [String!]!, hideDone: Boolean!, orders: [ProductsOrder!]!): [Product!]!
-	productDescendants(projectId: UUID!, ancestorIds: [UUID!]!, includeAncestors: Boolean!, filter: ProductFilter!, maxDepth: Int): [Product!]!
-	"""
-	Gets all ancestors for the given projects
-	It has the following behavior:
-	
-	If with_siblings is true:
-	* When product_ids array is empty, it returns all direct ancestors of project
-	* When product_ids array contains only single project, it will return all ancestors
-	of given product and all of their siblings, plus direct descendants of this project
-	* When product_ids array contains multiple projects, it will return all ancestors
-	of given product and all of their siblings.
-	
-	If with_siblings is false, it will return all ancestors for the given products.
-	"""
-	productAncestors(projectId: UUID!, productIds: [UUID!]!, withSiblings: Boolean!): [Product!]!
-	productsTagCloud(projectId: UUID, limit: Int!): [String!]!
-	tasks(projectFilter: TaskBoardFilter, tagsInclude: [String!]!, tagsExclude: [String!]!, users: [UUID!]!, orders: [ChunksOrder!]!): [Task!]!
-	tasksTagCloud(projectId: UUID, limit: Int!): [String!]!
-	epics(projects: [UUID!]!, users: [UUID!]!, orders: [ChunksOrder!]!): [Epic!]!
-	metricReport(reportDateFrom: NaiveDate!, reportDateTo: NaiveDate!, hierarchyLevel: Int!, usersSubset: [UUID!]!): [MetricReport!]!
-	chunkSpentReport(projectId: UUID!, chunkId: UUID): [ChunkSpentReport!]!
-	productSpentReport(projectId: UUID!, productId: UUID!): [ProductSpentReport!]!
-	domain(id: Int!): Domain!
-	domains: [Domain!]!
-	posts(filter: PostsInputFilter!, pagination: PostsInputPagination!): [Post!]!
-	post(projectId: UUID, id: UUID!): Post!
-	postsTagCloud(projectId: UUID, limit: Int!): [String!]!
-	mediajobs(userIds: [UUID!]!, limit: Int): [MediaJob!]!
-	reporter(id: String!): Reporter!
-	reporters: [Reporter!]!
-	auditUserTeams(users: [UUID!]!): [AuditUserTeam!]!
-	projectsDistributionChart(dateFrom: NaiveDate, dateTo: NaiveDate): ProjectsDistribution!
-	reactions: [String!]!
+  """
+  Returns the claims of the currently authenticated user. If no user is authenticated, returns `None`.
+  """
+  whoami: Claims
+  """
+  Retrieve a summary for the authenticated user, indicating if they have any unconfirmed or unfilled reports.
+  """
+  userSummary(userBy: UserBy!): [UserSummaryRecord!]!
+  """
+  Returns the authenticated user's claims if they are logged in.
+  """
+  strictWhoami: Claims
+  """
+  Get the user that is currently authenticated. This is intended to be used in the context
+  of a web application where the user is already authenticated. The user is extracted from
+  the context and the corresponding user object is queried from the database.
+  """
+  currentUser: User!
+  """
+  Get a user by their id.
+  """
+  user(id: UUID!): User
+  """
+  Get all users.
+
+  # Arguments
+
+  * `active`: If `Some(true)`, only active users will be returned. If `Some(false)`, only
+  inactive users will be returned. If `None`, all users will be returned.
+  """
+  users(active: Boolean): [User!]!
+  """
+  Get multiple users by their IDs.
+
+  # Arguments
+
+  * `ids`: The IDs of the users to return. If `None`, all users will be returned. If `Some`,
+  only users with the given IDs will be returned.
+  """
+  usersByIds(ids: [UUID!]): [User!]!
+  """
+  Get the most common tags used by all users, limited to `limit`.
+
+  # Arguments
+
+  * `limit`: The maximum number of tags to return.
+  """
+  usersTagCloud(limit: Int!): [String!]!
+  team(id: UUID!): Team
+  teams(active: Boolean): [Team!]!
+  chunk(id: UUID!): Chunk!
+  chunksExpanded(
+    projectId: UUID!
+    root: UUID
+    ids: [UUID!]!
+    products: [UUID!]!
+    users: [UUID!]!
+    description: String
+    hideDone: Boolean!
+    orders: [ChunksOrder!]!
+  ): [Chunk!]!
+  chunks(ids: [UUID!]!): [Chunk!]!
+  """
+  Gets all ancestors for the given projects
+
+  If `with_siblings` parameter is true:
+  * When `chunk_ids` array is empty, it returns all direct ancestors of project
+  * When `chunk_ids` array has elements, it will return all ancestors
+  of given chunks and all of their siblings, plus direct descendants of this project
+
+  If with_siblings is false, it will return all ancestors for the given chunks.
+  """
+  chunkAncestors(projectId: UUID!, chunkIds: [UUID!]!, withSiblings: Boolean!): [Chunk!]!
+  chunkDescendants(projectId: UUID!, ancestorIds: [UUID!]!, includeAncestors: Boolean!, maxDepth: Int): [Chunk!]!
+  productsStage(filter: ProductsStageFilter!, tagGroups: [[String!]!]!): [ProductStage!]!
+  report(where: ReportInput!): Report!
+  reports(where: ReportsInput!, order: ReportsOrder): [Report!]!
+  project(id: UUID!): Project!
+  projects(active: Boolean): [Project!]!
+  projectsTagCloud(limit: Int!): [String!]!
+  product(id: UUID!): Product!
+  products(ids: [UUID!]!): [Product!]!
+  productsExpanded(
+    projectId: UUID!
+    root: UUID
+    ids: [UUID!]!
+    description: String
+    tagsInclude: [String!]!
+    tagsExclude: [String!]!
+    hideDone: Boolean!
+    orders: [ProductsOrder!]!
+  ): [Product!]!
+  productDescendants(
+    projectId: UUID!
+    ancestorIds: [UUID!]!
+    includeAncestors: Boolean!
+    filter: ProductFilter!
+    maxDepth: Int
+  ): [Product!]!
+  """
+  Gets all ancestors for the given projects
+  It has the following behavior:
+
+  If with_siblings is true:
+  * When product_ids array is empty, it returns all direct ancestors of project
+  * When product_ids array contains only single project, it will return all ancestors
+  of given product and all of their siblings, plus direct descendants of this project
+  * When product_ids array contains multiple projects, it will return all ancestors
+  of given product and all of their siblings.
+
+  If with_siblings is false, it will return all ancestors for the given products.
+  """
+  productAncestors(projectId: UUID!, productIds: [UUID!]!, withSiblings: Boolean!): [Product!]!
+  productsTagCloud(projectId: UUID, limit: Int!): [String!]!
+  tasks(
+    projectFilter: TaskBoardFilter
+    tagsInclude: [String!]!
+    tagsExclude: [String!]!
+    description: String
+    users: [UUID!]!
+    orders: [ChunksOrder!]!
+  ): [Task!]!
+  tasksTagCloud(projectId: UUID, limit: Int!): [String!]!
+  epics(projects: [UUID!]!, users: [UUID!]!, description: String, orders: [ChunksOrder!]!): [Epic!]!
+  epicsNotCoveredBySprints(project: UUID!, epicStatuses: [EpicStatusEnum!]!, range: DateRange!): [Epic!]!
+  metricReports(
+    dateFrom: NaiveDate!
+    dateTo: NaiveDate!
+    hierarchyLevel: Int!
+    usersSubset: [UUID!]
+    userTagsInclude: [String!]
+    userTagsExclude: [String!]
+  ): [MetricReports!]!
+  metricSpecialDays(
+    dateFrom: NaiveDate!
+    dateTo: NaiveDate!
+    usersSubset: [UUID!]
+    userTagsInclude: [String!]
+    userTagsExclude: [String!]
+  ): [MetricSpecialDays!]!
+  chunkSpentReport(projectId: UUID!, chunkId: UUID): [ChunkSpentReport!]!
+  productSpentReport(projectId: UUID!, productId: UUID!): [ProductSpentReport!]!
+  """
+  Get a single company by ID.
+  """
+  company(id: Int!): Company!
+  """
+  Get all companies.
+  """
+  companies: [Company!]!
+  """
+  Get all domains.
+  """
+  domains: [Domain!]!
+  posts(filter: PostsInputFilter!, pagination: PostsInputPagination!): [Post!]!
+  post(projectId: UUID, id: UUID!): Post!
+  postsTagCloud(projectId: UUID, limit: Int!): [String!]!
+  mediajobs(userIds: [UUID!]!, limit: Int): [MediaJob!]!
+  mediaByHash(projectId: UUID!, hash: String!): [Media!]!
+  reporter(id: String!): Reporter!
+  reporters: [Reporter!]!
+  auditUserTeams(users: [UUID!]!): [AuditUserTeam!]!
+  projectsDistributionChart(dateFrom: NaiveDate, dateTo: NaiveDate, userIds: [UUID!]!): ProjectsDistribution!
+  reactions: [String!]!
+  sprintsDateRange(projectId: UUID!, userIds: [UUID!]!, tagsInclude: [String!]!, tagsExclude: [String!]!): SprintsDateRange
+  sprintsFiltered(filter: SprintsFilter!): [Sprint!]!
+  sprints(ids: [UUID!]!): [Sprint!]!
+  sprint(projectId: UUID!, id: UUID!): Sprint!
+  sprintsTagCloud(projectId: UUID, limit: Int!): [String!]!
+  specialDay(where: SpecialDayInput!): SpecialDay!
+  specialDays(where: SpecialDaysInput!): [SpecialDay!]!
+  specialDayKinds: [SpecialDayKind!]!
 }
 
 enum QueueStatus {
-	QUEUED
-	PROCESSING
-	COMPLETED
-	FAILED
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
 type Report {
-	reportDate: NaiveDate!
-	taskId: UUID!
-	userId: UUID!
-	spentHours: Int!
-	confirmed: Boolean!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	user: User!
-	task: Task!
+  reportDate: NaiveDate!
+  taskId: UUID!
+  userId: UUID!
+  spentHours: Int!
+  confirmed: Boolean!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  user: User!
+  task: Task!
 }
 
 input ReportAdd {
-	reportDate: NaiveDate!
-	taskId: UUID!
-	userId: UUID!
-	spentHours: Int!
+  reportDate: NaiveDate!
+  taskId: UUID!
+  userId: UUID!
+  spentHours: Int!
 }
 
 input ReportChange {
-	spentHours: Int!
+  spentHours: Int!
 }
 
 type ReportDeleted {
-	reportDate: NaiveDate!
-	chunkId: UUID!
-	userId: UUID!
+  reportDate: NaiveDate!
+  chunkId: UUID!
+  userId: UUID!
 }
 
 input ReportInput {
-	reportDate: NaiveDate!
-	taskId: UUID!
-	userId: UUID!
+  reportDate: NaiveDate!
+  taskId: UUID!
+  userId: UUID!
 }
 
 type Reporter {
-	id: String!
-	name: String!
-	params: JSON!
+  id: String!
+  name: String!
+  params: JSON!
 }
 
 input ReportsInput {
-	reportDateFrom: NaiveDate
-	reportDateTo: NaiveDate
-	taskIds: [UUID!]
-	userIds: [UUID!]
+  reportDateFrom: NaiveDate
+  reportDateTo: NaiveDate
+  taskIds: [UUID!]
+  userIds: [UUID!]
 }
 
 input ReportsOrder {
-	field: ReportsOrderField!
-	ascending: Boolean!
+  field: ReportsOrderField!
+  ascending: Boolean!
 }
 
 enum ReportsOrderField {
-	REPORT_DATE
-	CREATED_AT
-	UPDATED_AT
+  REPORT_DATE
+  CREATED_AT
+  UPDATED_AT
+}
+
+type SpecialDay {
+  userId: UUID!
+  day: NaiveDate!
+  kindId: Int!
+  confirmed: Boolean!
+  updatedBy: UUID
+  updatedAt: Timestamp!
+  user: User!
+  kind: SpecialDayKind!
+}
+
+input SpecialDayAdd {
+  day: NaiveDate!
+  userId: UUID!
+  kind: Int!
+  reason: String
+}
+
+input SpecialDayChange {
+  kind: Int!
+  reason: String
+}
+
+type SpecialDayDeleted {
+  userId: UUID!
+  day: NaiveDate!
+}
+
+input SpecialDayInput {
+  userId: UUID!
+  day: NaiveDate!
+}
+
+type SpecialDayKind {
+  id: Int!
+  code: String!
+  title: String!
+  description: String!
+}
+
+input SpecialDaysInput {
+  dateFrom: NaiveDate
+  dateTo: NaiveDate
+  userIds: [UUID!]
 }
 
 type SpentTimeRecord {
-	date: NaiveDate!
-	spentHours: Int!
+  date: NaiveDate!
+  spentHours: Int!
 }
 
+type Sprint {
+  projectId: UUID!
+  id: UUID!
+  title: String!
+  description: Delta!
+  progress: Float!
+  startAt: NaiveDate!
+  endAt: NaiveDate!
+  tags: [String!]!
+  createdBy: UUID!
+  createdAt: Timestamp!
+  updatedBy: UUID!
+  updatedAt: Timestamp!
+  project: Project!
+  users: [User!]!
+  products: [Product!]!
+  tasks: [Chunk!]!
+  epics: [Chunk!]!
+  createdByUser: User!
+  updatedByUser: User!
+}
+
+input SprintAdd {
+  projectId: UUID!
+  title: String!
+  description: Delta!
+  progress: Float!
+  startAt: NaiveDate!
+  endAt: NaiveDate!
+  tags: [String!]!
+  userIds: [UUID!]!
+  productIds: [UUID!]!
+  taskIds: [UUID!]!
+  epicIds: [UUID!]!
+}
+
+input SprintChange {
+  title: String
+  description: Delta
+  progress: Float
+  startAt: NaiveDate
+  endAt: NaiveDate
+  tags: StringsUpdate
+  userIds: UuidsUpdate
+  productIds: [UUID!]
+  taskIds: UuidsUpdate
+  epicIds: UuidsUpdate
+}
+
+type SprintDeleted {
+  id: UUID!
+}
+
+type SprintsDateRange {
+  startAt: NaiveDate!
+  endAt: NaiveDate!
+}
+
+input SprintsFilter {
+  range: DateRange
+  project: SprintsProjectFilter
+  users: [UUID!]!
+  tagsInclude: [String!]!
+  tagsExclude: [String!]!
+  orders: [SprintsOrder!]!
+}
+
+input SprintsOrder {
+  field: SprintsOrderField!
+  ascending: Boolean!
+}
+
+enum SprintsOrderField {
+  TITLE
+  START_AT
+  END_AT
+  COMPLETED
+  CREATED_AT
+  UPDATED_AT
+}
+
+input SprintsProjectFilter {
+  projectId: UUID!
+  tasks: [UUID!]!
+  products: [UUID!]!
+}
 
 input StringsAddRemove {
-	add: [String!]!
-	remove: [String!]!
+  add: [String!]!
+  remove: [String!]!
 }
 
-input StringsUpdate @oneOf {
-	set: [String!]
-	addRemove: StringsAddRemove
+input StringsUpdate {
+  set: [String!]
+  addRemove: StringsAddRemove
 }
 
 type Subscription {
-	userChanged: [User!]!
-	teamChanged: Team!
-	chunkChanged: [Chunk!]!
-	chunkDeleted: [ChunkDeleted!]!
-	assignmentChanged: [Assignment!]!
-	assignmentDeleted: [AssignmentDeleted!]!
-	reportChanged: [Report!]!
-	reportDeleted: [ReportDeleted!]!
-	projectsChanged: [Project!]!
-	projectsDeleted: [ProjectDeleted!]!
-	productsChanged: [Product!]!
-	productsDeleted: [ProductDeleted!]!
-	postsChanged: [Post!]!
-	postsDeleted: [PostDeleted!]!
-	mediaJobChanged(userIds: [UUID!]!): MediaJob!
-	mediaJobDeleted(userIds: [UUID!]!): MediaJobDeleted!
+  userChanged: [User!]!
+  usersDeleted: [UserDeleted!]!
+  teamChanged: Team!
+  teamsDeleted: [TeamDeleted!]!
+  chunkChanged: [Chunk!]!
+  chunkDeleted: [ChunkDeleted!]!
+  assignmentChanged: [Assignment!]!
+  assignmentDeleted: [AssignmentDeleted!]!
+  reportChanged: [Report!]!
+  reportDeleted: [ReportDeleted!]!
+  projectsChanged: [Project!]!
+  projectsDeleted: [ProjectDeleted!]!
+  productsChanged: [Product!]!
+  productsDeleted: [ProductDeleted!]!
+  postsChanged: [Post!]!
+  postsDeleted: [PostDeleted!]!
+  mediaJobChanged(userIds: [UUID!]!): MediaJob!
+  mediaJobDeleted(userIds: [UUID!]!): MediaJobDeleted!
+  sprintsChanged: [Sprint!]!
+  sprintsDeleted: [SprintDeleted!]!
+  specialDayChanged: [SpecialDay!]!
+  specialDayDeleted: [SpecialDayDeleted!]!
 }
 
 type Task implements Chunk {
-	projectId: UUID!
-	id: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	estimation: Estimation
-	estimationSum: Estimation!
-	spentSum: Estimation!
-	childrenCount: Int!
-	depth: Int!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	priority: Int!
-	tags: [String!]!
-	taskStatus: TaskStatusEnum!
-	users: [User!]!
-	project: Project!
-	products: [Product!]!
-	parent: Chunk
-	assignments: [Assignment!]!
-	createdBy: UUID!
-	updatedBy: UUID!
-	createdByUser: User!
-	updatedByUser: User!
+  projectId: UUID!
+  id: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  estimation: Estimation
+  estimationSum: Estimation!
+  spentSum: Estimation!
+  childrenCount: Int!
+  depth: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  priority: Int!
+  tags: [String!]!
+  taskStatus: TaskStatusEnum!
+  users: [User!]!
+  sprints: [Sprint!]!
+  project: Project!
+  products: [Product!]!
+  parent: Chunk
+  assignments: [Assignment!]!
+  createdBy: UUID!
+  updatedBy: UUID!
+  createdByUser: User!
+  updatedByUser: User!
 }
 
 input TaskAdd {
-	projectId: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	estimation: Int
-	priority: Int
-	users: [UUID!]!
-	products: [UUID!]!
-	tags: [String!]!
+  projectId: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  estimation: Int
+  priority: Int
+  users: [UUID!]!
+  products: [UUID!]!
+  tags: [String!]!
+  sprints: [UUID!]!
 }
 
-input TaskAssignAction @oneOf {
-	startWork: UUID
-	stopWork: Int
+input TaskAssignAction {
+  """
+  Provide executor user ID for the task
+  """
+  startWork: UUID
+  """
+  Provide time spent today for the task
+  """
+  stopWork: Int
 }
 
 input TaskBoardFilter {
-	projectId: UUID!
-	chunks: [UUID!]!
-	products: [UUID!]!
+  projectId: UUID!
+  chunks: [UUID!]!
+  products: [UUID!]!
 }
 
 input TaskChange {
-	parentId: UUID
-	title: String
-	description: Delta
-	estimation: Int
-	priority: Int
-	users: UuidsUpdate
-	products: [UUID!]
-	tags: StringsUpdate
+  parentId: UUID
+  title: String
+  description: Delta
+  estimation: Int
+  priority: Int
+  users: UuidsUpdate
+  products: [UUID!]
+  tags: StringsUpdate
+  sprints: UuidsUpdate
 }
 
 type TaskGroup implements Chunk {
-	projectId: UUID!
-	id: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	estimation: Estimation
-	estimationSum: Estimation!
-	spentSum: Estimation!
-	childrenCount: Int!
-	depth: Int!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	priority: Int!
-	calcTaskStatus: TaskStatusEnum
-	project: Project!
-	parent: Chunk
-	createdBy: UUID!
-	updatedBy: UUID!
-	createdByUser: User!
-	updatedByUser: User!
+  projectId: UUID!
+  id: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  estimation: Estimation
+  estimationSum: Estimation!
+  spentSum: Estimation!
+  childrenCount: Int!
+  depth: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  priority: Int!
+  calcTaskStatus: TaskStatusEnum
+  project: Project!
+  parent: Chunk
+  createdBy: UUID!
+  updatedBy: UUID!
+  createdByUser: User!
+  updatedByUser: User!
 }
 
 input TaskGroupAdd {
-	projectId: UUID!
-	parentId: UUID
-	title: String!
-	description: Delta!
-	priority: Int
-	estimation: Int
+  projectId: UUID!
+  parentId: UUID
+  title: String!
+  description: Delta!
+  priority: Int
+  estimation: Int
 }
 
 input TaskGroupChange {
-	parentId: UUID
-	title: String
-	description: Delta
-	priority: Int
-	estimation: Int
+  parentId: UUID
+  title: String
+  description: Delta
+  priority: Int
+  estimation: Int
 }
 
 enum TaskStatusEnum {
-	BACKLOG
-	TODO
-	WIP
-	HOLD
-	DONE
+  BACKLOG
+  TODO
+  WIP
+  HOLD
+  DONE
 }
 
 type Team {
-	id: UUID!
-	name: String!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	deletedAt: Timestamp
+  id: UUID!
+  name: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
 }
 
-input TeamChange {
-	name: String
-	isDeleted: Boolean
-	users: [UUID!]
+type TeamDeleted {
+  id: UUID!
 }
 
 """
@@ -1004,58 +1320,98 @@ scalar UUID
 scalar Upload
 
 type User {
-	domainId: Int!
-	id: UUID!
-	name: String!
-	role: UserRole!
-	avatar: Boolean!
-	isProduction: Boolean!
-	createdAt: Timestamp!
-	updatedAt: Timestamp!
-	deletedAt: Timestamp
-	teamId: UUID
-	timezone: String!
-	team: Team
-	domain: Domain!
+  companyId: Int!
+  domainId: Int
+  id: UUID!
+  givenName: String
+  familyName: String
+  name: String!
+  login: String
+  isAdmin: Boolean!
+  roles: [UserRole!]!
+  avatar: Boolean!
+  tags: [String!]!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+  teamId: UUID
+  timezone: String!
+  team: Team
+  domain: Domain
+  company: Company!
+}
+
+"""
+Oneof for different ways to identify a user. It depends whether the user belongs to a domain or not.
+"""
+input UserBy {
+  withoutDomain: UserWithoutDomain
+  withDomain: UserWithDomain
 }
 
 input UserChange {
-	name: String
-	role: UserRole
-	avatar: Upload
-	isDeleted: Boolean
-	teamId: UUID
-	timezone: String
-	isProduction: Boolean
+  givenName: String
+  familyName: String
+  login: String
+  password: String
+  roles: UserRolesUpdate
+  avatar: Upload
+  isDeleted: Boolean
+  teamId: UUID
+  timezone: String
+  tags: StringsUpdate
+}
+
+type UserDeleted {
+  id: UUID!
 }
 
 enum UserRole {
-	USER
-	ADMIN
+  EDITOR
+  REPORTER
+  MANAGER
+  REPORT_AUDITOR
+}
+
+input UserRolesAddRemove {
+  add: [UserRole!]!
+  remove: [UserRole!]!
+}
+
+input UserRolesUpdate {
+  set: [UserRole!]
+  addRemove: UserRolesAddRemove
 }
 
 type UserSummaryRecord {
-	date: NaiveDate!
-	hours: Int!
-	ack: Boolean!
+  date: NaiveDate!
+  hours: Int
+  specialDayKindId: Int
+  ack: Boolean!
+  specialDayKind: SpecialDayKind
+}
+
+"""
+Users with domain can be identified by `domain_name` and `guid`.
+"""
+input UserWithDomain {
+  domainName: String!
+  guid: UUID!
+}
+
+"""
+Users without domain can be identified by `login`.
+"""
+input UserWithoutDomain {
+  login: String!
 }
 
 input UuidsAddRemove {
-	add: [UUID!]!
-	remove: [UUID!]!
+  add: [UUID!]!
+  remove: [UUID!]!
 }
 
-input UuidsUpdate @oneOf {
-	set: [UUID!]
-	addRemove: UuidsAddRemove
-}
-
-directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
-directive @oneOf on INPUT_OBJECT
-directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
-directive @specifiedBy(url: String!) on SCALAR
-schema {
-	query: Query
-	mutation: Mutation
-	subscription: Subscription
+input UuidsUpdate {
+  set: [UUID!]
+  addRemove: UuidsAddRemove
 }

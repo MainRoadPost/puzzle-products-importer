@@ -39,12 +39,16 @@ class Client(AsyncBaseClient):
         return GetDomains.model_validate(data)
 
     async def login(
-        self, domain_id: int, username: str, password: str, **kwargs: Any
+        self,
+        username: str,
+        password: str,
+        domain_name: Union[Optional[str], UnsetType] = UNSET,
+        **kwargs: Any
     ) -> Login:
         query = gql(
             """
-            mutation Login($domainId: Int!, $username: String!, $password: String!) {
-              login(domainId: $domainId, username: $username, password: $password) {
+            mutation Login($domainName: String, $username: String!, $password: String!) {
+              login(domainName: $domainName, username: $username, password: $password) {
                 id
                 nbf
                 exp
@@ -53,7 +57,7 @@ class Client(AsyncBaseClient):
             """
         )
         variables: Dict[str, object] = {
-            "domainId": domain_id,
+            "domainName": domain_name,
             "username": username,
             "password": password,
         }
