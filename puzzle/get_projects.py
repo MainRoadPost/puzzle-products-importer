@@ -14,7 +14,6 @@ class GetProjects(BaseModel):
 
 class GetProjectsProjects(BaseModel):
     id: Any
-    code: str
     title: str
     done_at: Optional[Any] = Field(alias="doneAt")
 

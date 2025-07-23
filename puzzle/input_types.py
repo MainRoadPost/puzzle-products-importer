@@ -12,6 +12,7 @@ from .enums import (
     ProductKind,
     ProductsOrderField,
     ProductStatusEnum,
+    ProjectsOrderField,
     ReportsOrderField,
     SprintsOrderField,
     UserRole,
@@ -49,7 +50,7 @@ class EpicAdd(BaseModel):
     project_id: Any = Field(alias="projectId")
     parent_id: Optional[Any] = Field(alias="parentId", default=None)
     title: str
-    description: Any
+    description: Optional[Any] = None
     estimation: Optional[int] = None
     priority: Optional[int] = None
     status: EpicStatusEnum
@@ -74,7 +75,7 @@ class EpicGroupAdd(BaseModel):
     project_id: Any = Field(alias="projectId")
     parent_id: Optional[Any] = Field(alias="parentId", default=None)
     title: str
-    description: Any
+    description: Optional[Any] = None
     priority: Optional[int] = None
     estimation: Optional[int] = None
 
@@ -90,7 +91,7 @@ class EpicGroupChange(BaseModel):
 class PostAdd(BaseModel):
     project_id: Any = Field(alias="projectId")
     product_ids: List[Any] = Field(alias="productIds")
-    description: Any
+    description: Optional[Any] = None
     tags: List[str]
     uploads: List[Upload]
 
@@ -99,7 +100,7 @@ class PostAddBlind(BaseModel):
     user_by: "UserBy" = Field(alias="userBy")
     project_code: str = Field(alias="projectCode")
     product_paths: List[str] = Field(alias="productPaths")
-    description: Any
+    description: Optional[Any] = None
     tags: List[str]
     uploads: List[Upload]
 
@@ -113,6 +114,26 @@ class PostChange(BaseModel):
     media_order: List[Any] = Field(alias="mediaOrder")
 
 
+class PostCommentAdd(BaseModel):
+    project_id: Any = Field(alias="projectId")
+    post_id: Any = Field(alias="postId")
+    reply_to: Optional[Any] = Field(alias="replyTo", default=None)
+    media_id: Optional[Any] = Field(alias="mediaId", default=None)
+    comment: Optional[Any] = None
+    details: Optional[Any] = None
+    media_uploads: List[Upload] = Field(alias="mediaUploads")
+    sketch: Optional["SketchUpload"] = None
+
+
+class PostCommentChange(BaseModel):
+    comment: Optional[Any] = None
+    details: Optional[Any] = None
+    media_uploads: List[Upload] = Field(alias="mediaUploads")
+    delete_media: List[Any] = Field(alias="deleteMedia")
+    media_order: List[Any] = Field(alias="mediaOrder")
+    sketch: Optional["SketchUpload"] = None
+
+
 class PostsCursor(BaseModel):
     last_time: Any = Field(alias="lastTime")
     last_id: Any = Field(alias="lastId")
@@ -120,9 +141,9 @@ class PostsCursor(BaseModel):
 
 class PostsInputFilter(BaseModel):
     project_id: Optional[Any] = Field(alias="projectId", default=None)
-    product_ids: List[Any] = Field(alias="productIds")
-    chunk_ids: List[Any] = Field(alias="chunkIds")
-    user_ids: List[Any] = Field(alias="userIds")
+    product_ids: Optional[List[Any]] = Field(alias="productIds", default=None)
+    chunk_ids: Optional[List[Any]] = Field(alias="chunkIds", default=None)
+    user_ids: Optional[List[Any]] = Field(alias="userIds", default=None)
     description: Optional[str] = None
     post_tags_include: Optional[List[str]] = Field(
         alias="postTagsInclude", default=None
@@ -148,7 +169,7 @@ class ProductAdd(BaseModel):
     parent_id: Optional[Any] = Field(alias="parentId", default=None)
     code: str
     kind: ProductKind
-    description: Any
+    description: Optional[Any] = None
     thumbnail: Optional[Upload] = None
     deliverable: Optional[bool] = None
     status: Optional[ProductStatusEnum] = None
@@ -204,10 +225,12 @@ class ProductsStageFilter(BaseModel):
 class ProjectAdd(BaseModel):
     code: str
     title: str
-    description: Any
+    description: Optional[Any] = None
+    priority: int
     estimation: Optional[int] = None
     thumbnail: Optional[Upload] = None
     tags: List[str]
+    due_to: Optional[Any] = Field(alias="dueTo", default=None)
     done_at: Optional[Any] = Field(alias="doneAt", default=None)
 
 
@@ -215,10 +238,17 @@ class ProjectChange(BaseModel):
     code: Optional[str] = None
     title: Optional[str] = None
     description: Optional[Any] = None
+    priority: Optional[int] = None
     estimation: Optional[int] = None
     thumbnail: Optional[Upload] = None
     tags: Optional["StringsUpdate"] = None
+    due_to: Optional[Any] = Field(alias="dueTo", default=None)
     done_at: Optional[Any] = Field(alias="doneAt", default=None)
+
+
+class ProjectsOrder(BaseModel):
+    field: ProjectsOrderField
+    ascending: bool
 
 
 class ReportAdd(BaseModel):
@@ -250,6 +280,11 @@ class ReportsOrder(BaseModel):
     ascending: bool
 
 
+class SketchUpload(BaseModel):
+    sketch_zip: Upload = Field(alias="sketchZip")
+    thumbnail: Upload
+
+
 class SpecialDayAdd(BaseModel):
     day: Any
     user_id: Any = Field(alias="userId")
@@ -276,7 +311,7 @@ class SpecialDaysInput(BaseModel):
 class SprintAdd(BaseModel):
     project_id: Any = Field(alias="projectId")
     title: str
-    description: Any
+    description: Optional[Any] = None
     progress: float
     start_at: Any = Field(alias="startAt")
     end_at: Any = Field(alias="endAt")
@@ -334,7 +369,7 @@ class TaskAdd(BaseModel):
     project_id: Any = Field(alias="projectId")
     parent_id: Optional[Any] = Field(alias="parentId", default=None)
     title: str
-    description: Any
+    description: Optional[Any] = None
     estimation: Optional[int] = None
     priority: Optional[int] = None
     users: List[Any]
@@ -370,7 +405,7 @@ class TaskGroupAdd(BaseModel):
     project_id: Any = Field(alias="projectId")
     parent_id: Optional[Any] = Field(alias="parentId", default=None)
     title: str
-    description: Any
+    description: Optional[Any] = None
     priority: Optional[int] = None
     estimation: Optional[int] = None
 
@@ -434,6 +469,8 @@ class UuidsUpdate(BaseModel):
 
 EpicChange.model_rebuild()
 PostAddBlind.model_rebuild()
+PostCommentAdd.model_rebuild()
+PostCommentChange.model_rebuild()
 PostsInputPagination.model_rebuild()
 ProductChange.model_rebuild()
 ProjectChange.model_rebuild()

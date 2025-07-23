@@ -17,13 +17,15 @@ mutation Login($domainName: String, $username: String!, $password: String!) {
 
 # Fetch projects
 query GetProjects {
-  projects {
+  projects(
+    orders: [{ field: TITLE, ascending: true }]
+  ) {
     id
-    code
     title
     doneAt
   }
 }
+
 
 # Fetch product descendants (used in check_if_exists)
 query GetProductDescendants($projectId: UUID!, $ancestorIds: [UUID!]!, $maxDepth: Int) {
@@ -54,6 +56,29 @@ mutation CreateProduct($product: ProductAdd!) {
     id
   }
 }
+
+mutation UpdateProducts(
+  $projectId: UUID!
+  $productIds: [UUID!]!
+  $change: ProductChange!
+) {
+  productsUpdate(
+    projectId: $projectId
+    productIds: $productIds
+    change: $change
+  ) {
+    id
+    code
+    status
+    dueTo       
+    estimation
+    deliverable
+    description
+    tags
+    thumbnail         
+  }
+}
+
 
 # Fetch whoami (optional, for debugging)
 query WhoAmI {

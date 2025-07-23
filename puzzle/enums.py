@@ -22,6 +22,11 @@ class EpicStatusEnum(str, Enum):
     OMIT = "OMIT"
 
 
+class NotificationEntityState(str, Enum):
+    CREATED = "CREATED"
+    UPDATED = "UPDATED"
+
+
 class ProductKind(str, Enum):
     GROUP = "GROUP"
     PRODUCT = "PRODUCT"
@@ -39,6 +44,12 @@ class ProductsOrderField(str, Enum):
     SPENT_SUM = "SPENT_SUM"
     STATUS = "STATUS"
     UPDATED_AT = "UPDATED_AT"
+
+
+class ProjectsOrderField(str, Enum):
+    TITLE = "TITLE"
+    CODE = "CODE"
+    PRIORITY = "PRIORITY"
 
 
 class QueueStatus(str, Enum):

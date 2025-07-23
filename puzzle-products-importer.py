@@ -17,7 +17,7 @@ from PyQt5.QtCore import Qt
 from qasync import QEventLoop, asyncSlot
 
 # Import the async PuzzleClient and related classes and methods
-from puzzle.client import Client, ProductAdd
+from puzzle.client import Client, ProductAdd, ProductChange
 from puzzle.enums import ProductKind
 from puzzle.base_model import Upload
 
@@ -132,11 +132,17 @@ class PuzzleUploaderUI(QWidget):
 
     def init_import_section(self):
         """Initializes the import section."""
+
         # Import button
         self.import_button = QPushButton('Start Import')
         self.import_button.setEnabled(False)
         self.import_button.clicked.connect(self.start_import)
         self.layout.addWidget(self.import_button)
+
+        # режим Update
+        self.update_mode_checkbox = QCheckBox('Update')
+        self.update_mode_checkbox.setChecked(False)       # по умолчанию – выключен
+        self.layout.addWidget(self.update_mode_checkbox)
 
         # Import status label
         self.import_status_label = QLabel('')
@@ -314,6 +320,9 @@ class PuzzleUploaderUI(QWidget):
         logging.info(f"Selected project ID: {self.selected_project_id}")
         self.import_status_label.setText("Import started...")
 
+        # store update mode
+        self.update_mode = self.update_mode_checkbox.isChecked()
+
         # Parse CSV file
         root_node = self.parse_csv_file(self.csv_file_path)
 
@@ -391,6 +400,8 @@ class PuzzleUploaderUI(QWidget):
                 if existing_item['kind'] != child_node.kind:
                     logging.warning(f"Conflict: '{child_name}' is a {existing_item['kind']} but expected {child_node.kind}.")
                     continue
+                if self.update_mode and child_node.kind == 'PRODUCT':
+                    await self.update_product(child_node, existing_item['id'])
                 else:
                     logging.info(f"{child_name} already exists as {child_node.kind}. Skipping creation.")
                     if child_node.kind == 'GROUP':
@@ -547,6 +558,72 @@ class PuzzleUploaderUI(QWidget):
                 logging.warning(f"Failed to create product '{node.name}'.")
         except Exception as e:
             logging.error(f"Error creating product '{node.name}': {e}")
+
+    async def update_product(self, node, existing_id):
+        row = node.product_data
+        has = row.__contains__
+
+        change_kwargs = {}              # сюда собираем только то, что действительно меняется
+
+        if has('deliverable'):
+            change_kwargs['deliverable'] = str(row['deliverable']).strip().lower() == 'true'
+
+        if has('awarded'):
+            try:
+                change_kwargs['estimation'] = int(row['awarded'])
+            except (ValueError, TypeError):
+                logging.warning(f"Bad 'awarded' value for {node.name}")
+
+        if has('due'):
+            date_parsed = self.parse_due_date(row['due'])
+            if date_parsed:
+                change_kwargs['due_to'] = date_parsed
+
+        if has('status'):
+            st = str(row['status']).strip().upper()
+            if st in {'ACTIVE', 'COMPLETED', 'CANCELED'}:
+                change_kwargs['status'] = st
+
+        if has('tags'):
+            change_kwargs['tags'] = [t.strip() for t in row['tags'].split(',') if t.strip()]
+
+        if has('description'):
+            try:
+                change_kwargs['description'] = json.loads(row['description'])
+            except json.JSONDecodeError:
+                logging.warning(f"Bad description json for {node.name}")
+
+        # thumbnail ------------------------------------------
+        if has('picture') and row['picture'].strip():
+            img_path = os.path.join(os.path.dirname(self.csv_file_path), row['picture'])
+            if os.path.exists(img_path):
+                mime, _ = mimetypes.guess_type(img_path)
+                change_kwargs['thumbnail'] = Upload(
+                    filename=os.path.basename(img_path),
+                    content=open(img_path, 'rb'),
+                    content_type=mime
+                )
+            else:
+                logging.warning(f"Image {img_path} not found for {node.name}")
+        # -----------------------------------------------------
+
+        if not change_kwargs:
+            logging.info(f"No updatable fields for {node.name}, skipping")
+            return
+
+        try:
+            change = ProductChange(**change_kwargs)
+            resp = await self.client.update_products(
+                project_id=self.selected_project_id,
+                product_ids=[existing_id],      # один продукт – один вызов, чтобы картинка передавалась корректно
+                change=change
+            )
+            if resp.products_update:
+                logging.info(f"{node.name} updated")
+        except Exception as e:
+            logging.error(f"Failed to update {node.name}: {e}")
+
+
 
     @staticmethod
     def parse_due_date(due_str):

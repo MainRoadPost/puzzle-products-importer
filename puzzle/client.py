@@ -10,8 +10,9 @@ from .create_product_group import CreateProductGroup
 from .get_domains import GetDomains
 from .get_product_descendants import GetProductDescendants
 from .get_projects import GetProjects
-from .input_types import ProductAdd
+from .input_types import ProductAdd, ProductChange
 from .login import Login
+from .update_products import UpdateProducts
 from .who_am_i import WhoAmI
 
 
@@ -71,9 +72,8 @@ class Client(AsyncBaseClient):
         query = gql(
             """
             query GetProjects {
-              projects {
+              projects(orders: [{field: TITLE, ascending: true}]) {
                 id
-                code
                 title
                 doneAt
               }
@@ -164,6 +164,41 @@ class Client(AsyncBaseClient):
         )
         data = self.get_data(response)
         return CreateProduct.model_validate(data)
+
+    async def update_products(
+        self,
+        project_id: Any,
+        product_ids: List[Any],
+        change: ProductChange,
+        **kwargs: Any
+    ) -> UpdateProducts:
+        query = gql(
+            """
+            mutation UpdateProducts($projectId: UUID!, $productIds: [UUID!]!, $change: ProductChange!) {
+              productsUpdate(projectId: $projectId, productIds: $productIds, change: $change) {
+                id
+                code
+                status
+                dueTo
+                estimation
+                deliverable
+                description
+                tags
+                thumbnail
+              }
+            }
+            """
+        )
+        variables: Dict[str, object] = {
+            "projectId": project_id,
+            "productIds": product_ids,
+            "change": change,
+        }
+        response = await self.execute(
+            query=query, operation_name="UpdateProducts", variables=variables, **kwargs
+        )
+        data = self.get_data(response)
+        return UpdateProducts.model_validate(data)
 
     async def who_am_i(self, **kwargs: Any) -> WhoAmI:
         query = gql(
