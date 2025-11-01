@@ -162,3 +162,5 @@ cython_debug/
 
 users.json
 test.py
+
+puzzle/

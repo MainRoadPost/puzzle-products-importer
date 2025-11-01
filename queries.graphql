@@ -70,7 +70,7 @@ mutation UpdateProducts(
     id
     code
     status
-    dueTo       
+    dueDate
     estimation
     deliverable
     description

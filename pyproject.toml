@@ -1,4 +1,31 @@
+[project]
+name = "puzzle-products-importer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ariadne-codegen>=0.16.0",
+    "httpx>=0.28.1",
+    "pydantic>=2.12.3",
+    "pyqt5>=5.15.11",
+    "qasync>=0.28.0",
+]
+
 [tool.ariadne-codegen]
 schema_path = "schema.graphql"
 queries_path = "queries.graphql"
 target_package_name = "puzzle"
+# enable_custom_operations = true
+
+[tool.ariadne-codegen.scalars.UUID]
+type = "str"
+
+[tool.ariadne-codegen.scalars.Timestamp]
+type = "str"
+
+[tool.ariadne-codegen.scalars.NaiveDate]
+type = "str"
+
+[tool.ariadne-codegen.scalars.Estimation]
+type = "int"

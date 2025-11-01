@@ -1,3 +1,5 @@
 #!/bin/bash
 
-"$(dirname $(realpath "$0"))"/venv/bin/python "$(dirname $(realpath "$0"))"/puzzle-products-importer.py "$@"
+script_path=$(realpath "$0")
+script_dir=$(dirname "$script_path")
+"$script_dir"/.venv/bin/python "$script_dir"/main.py "$@"
