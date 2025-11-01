@@ -91,3 +91,21 @@ puzzle-products-importer
    ```
 
 **Важно:** Запуск `ariadne-codegen` является обязательным шагом перед первым запуском приложения и после любых изменений в файлах `schema.graphql` или `queries.graphql`.
+
+## Обновление схемы
+
+Для обновления схемы потребуется установленное приложение cynic-cli, которое можно установить следующей командой (в системе должен быть установлен [Rust](https://rust-lang.org/tools/install/)):
+
+```shell
+cargo install --git https://github.com/obmarg/cynic.git cynic-cli
+```
+
+После установки cynic-cli выполните в shell команду `./get-schema.sh > schema.graphql`, в корне репозитория. Этот скрипт выполнит аутентификацию на сервере Puzzle и скачает актуальную схему GraphQL в файл `schema.graphql`.
+
+Чтобы скрипт успешно выполнился, необходимо предварительно задать в файле `.env` переменные:
+- `PUZZLE_API` — URL GraphQL API сервера Puzzle.
+- `PUZZLE_USER_DOMAIN` — домен студии, пустой, если домен не используется.
+- `PUZZLE_USERNAME` — имя пользователя.
+- `PUZZLE_PASSWORD` — пароль пользователя.
+
+пример файла `.env` приведен в `example.env`.
