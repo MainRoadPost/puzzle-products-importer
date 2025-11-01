@@ -1,0 +1,3 @@
+path,code,awarded,due,picture,deliverable,status,tags
+episode01/seq01,0010,10,21.06.2025,images/0010.jpg,TRUE,ACTIVE,tag1 tag2
+episode01/seq01,0020,,,,,,

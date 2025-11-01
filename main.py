@@ -3,12 +3,12 @@
 import sys
 import os
 import csv
-import json
 import logging
 from datetime import datetime
-import asyncio  # Added for async support
+import asyncio
 import mimetypes
-from typing import TypedDict
+from typing import TypedDict, Any
+from collections.abc import Coroutine
 from pydantic import BaseModel, ValidationError
 
 from PyQt5.QtWidgets import (
@@ -31,6 +31,7 @@ from qasync import QEventLoop, asyncSlot  # pyright: ignore[reportMissingTypeStu
 from puzzle.client import Client, ProductAdd, ProductChange
 from puzzle.enums import ProductKind, ProductStatusEnum
 from puzzle.base_model import Upload
+from puzzle.exceptions import GraphQLClientGraphQLError, GraphQLClientHttpError
 
 
 PUZZLE_API = "http://localhost:8000/api/graphql"
@@ -40,18 +41,19 @@ PUZZLE_API = "http://localhost:8000/api/graphql"
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
 
-# | path             | code  | awarded | due     | picture  | deliverable | status  | tags      |
-# |------------------|-------|---------|---------|----------|-------------|---------|-----------|
-# | episode01/24_chs | 0010  |    10   |12.11.24 | 0010.jpg | TRUE        | ACTIVE  | tag1,tag2 |
+# ;CSV example
+# path,code,awarded,due,picture,deliverable,status,tags
+# episode01/seq01,0010,10,21.06.2025,images/0010.jpg,TRUE,ACTIVE,tag1 tag2
+# episode01/seq01,0020,,,,,,
 
 
 class CsvRow(BaseModel):
     path: str
     code: str
-    awarded: int | None
+    awarded: str
     due: str
     picture: str
-    deliverable: bool | None
+    deliverable: str
     status: str
     tags: str
 
@@ -111,7 +113,7 @@ class PuzzleUploaderUI(QWidget):
         self.client = Client(url=PUZZLE_API)
 
         # Fetch the list of domains at startup
-        self.get_domains()  # Start async call
+        self.schedule_async(self.get_domains())  # Start async call
 
     def init_ui(self):
         """Initializes the UI components."""
@@ -144,7 +146,9 @@ class PuzzleUploaderUI(QWidget):
 
         # Login button
         self.login_button = QPushButton("Login")
-        self.login_button.clicked.connect(self.attempt_login)
+        self.login_button.clicked.connect(
+            lambda: self.schedule_async(self.attempt_login())
+        )
         self.ui_layout.addWidget(self.login_button)
 
         # Login status label
@@ -175,7 +179,9 @@ class PuzzleUploaderUI(QWidget):
         # Import button
         self.import_button = QPushButton("Start Import")
         self.import_button.setEnabled(False)
-        self.import_button.clicked.connect(self.start_import)
+        self.import_button.clicked.connect(
+            lambda: self.schedule_async(self.start_import())
+        )
         self.ui_layout.addWidget(self.import_button)
 
         # режим Update
@@ -547,9 +553,9 @@ class PuzzleUploaderUI(QWidget):
             return
 
         # Extract and format product data with proper checks and defaults
-        deliverable_value = product_data.deliverable
-        estimation_value = product_data.awarded
-        due_value = product_data.due
+        deliverable_value = product_data.deliverable.strip().upper() == "TRUE"
+        estimation_value = int(product_data.awarded) if product_data.awarded else None
+        due_value = self.parse_due_date(product_data.due)
 
         # Handle 'status' field
         status_str = product_data.status.strip().upper()
@@ -567,7 +573,7 @@ class PuzzleUploaderUI(QWidget):
 
         # Handle 'tags' field
         tags_str = product_data.tags
-        tags_list = [tag.strip() for tag in tags_str.split(",") if tag.strip()]
+        tags_list = [tag.strip() for tag in tags_str.split(" ") if tag.strip()]
 
         # # Handle 'description' field
         # description_str = product_data.description
@@ -592,10 +598,14 @@ class PuzzleUploaderUI(QWidget):
             if os.path.exists(image_path):
                 logging.info(f"Including thumbnail for product '{node.name}'.")
                 mime_type, _ = mimetypes.guess_type(image_path)
-                thumbnail_upload = Upload(
-                    filename=os.path.basename(image_path),
-                    content=open(image_path, "rb"),
-                    content_type=mime_type,
+                thumbnail_upload = (
+                    Upload(
+                        filename=os.path.basename(image_path),
+                        content=open(image_path, "rb"),
+                        content_type=mime_type,
+                    )
+                    if mime_type
+                    else None
                 )
             else:
                 logging.warning(
@@ -631,10 +641,23 @@ class PuzzleUploaderUI(QWidget):
                 )
             else:
                 logging.warning(f"Failed to create product '{node.name}'.")
-        except Exception as e:
-            logging.error(f"Error creating product '{node.name}': {e}")
+
+        except GraphQLClientGraphQLError as e:
+            logging.error(f"Error creating product '{node.name}': {e.message}")
+        except GraphQLClientHttpError as e:
+            logging.error(
+                f"HTTP error creating product '{node.name}': {e.response.text}"
+            )
 
     async def update_product(self, node: ProductTreeNode, existing_id: str):
+        if self.selected_project_id is None:
+            logging.error("No project selected for updating product.")
+            return
+
+        if self.csv_file_path is None:
+            logging.warning("No csv file selected, skipping")
+            return
+
         row = node.product_data
         if row is None:
             logging.warning(f"No product data for {node.name}, skipping update.")
@@ -642,47 +665,42 @@ class PuzzleUploaderUI(QWidget):
 
         change_kwargs = {}  # сюда собираем только то, что действительно меняется
 
-        if row.deliverable is not None:
-            change_kwargs["deliverable"] = (
-                str(row.deliverable).strip().lower() == "true"
-            )
+        change_kwargs["deliverable"] = str(row.deliverable).strip().lower() == "true"
 
-        if has("awarded"):
-            try:
-                change_kwargs["estimation"] = int(row["awarded"])
-            except (ValueError, TypeError):
-                logging.warning(f"Bad 'awarded' value for {node.name}")
+        try:
+            change_kwargs["estimation"] = row.awarded
+        except (ValueError, TypeError):
+            logging.warning(f"Bad 'awarded' value for {node.name}")
 
-        if has("due"):
-            date_parsed = self.parse_due_date(row["due"])
-            if date_parsed:
-                change_kwargs["due_to"] = date_parsed
+        date_parsed = self.parse_due_date(row.due)
+        if date_parsed:
+            change_kwargs["due_to"] = date_parsed
 
-        if has("status"):
-            st = str(row["status"]).strip().upper()
-            if st in {"ACTIVE", "COMPLETED", "CANCELED"}:
-                change_kwargs["status"] = st
+        st = str(row.status).strip().upper()
+        if st in {"ACTIVE", "COMPLETED", "CANCELED"}:
+            change_kwargs["status"] = st
 
-        if has("tags"):
-            change_kwargs["tags"] = [
-                t.strip() for t in row["tags"].split(",") if t.strip()
-            ]
+        change_kwargs["tags"] = [t.strip() for t in row.tags.split(" ") if t.strip()]
 
-        if has("description"):
-            try:
-                change_kwargs["description"] = json.loads(row["description"])
-            except json.JSONDecodeError:
-                logging.warning(f"Bad description json for {node.name}")
+        # if row.description is not None:
+        #     try:
+        #         change_kwargs["description"] = json.loads(row.description)
+        #     except json.JSONDecodeError:
+        #         logging.warning(f"Bad description json for {node.name}")
 
         # thumbnail ------------------------------------------
-        if has("picture") and row["picture"].strip():
-            img_path = os.path.join(os.path.dirname(self.csv_file_path), row["picture"])
+        if row.picture.strip():
+            img_path = os.path.join(os.path.dirname(self.csv_file_path), row.picture)
             if os.path.exists(img_path):
                 mime, _ = mimetypes.guess_type(img_path)
-                change_kwargs["thumbnail"] = Upload(
-                    filename=os.path.basename(img_path),
-                    content=open(img_path, "rb"),
-                    content_type=mime,
+                change_kwargs["thumbnail"] = (
+                    Upload(
+                        filename=os.path.basename(img_path),
+                        content=open(img_path, "rb"),
+                        content_type=mime,
+                    )
+                    if mime
+                    else None
                 )
             else:
                 logging.warning(f"Image {img_path} not found for {node.name}")
@@ -693,7 +711,7 @@ class PuzzleUploaderUI(QWidget):
             return
 
         try:
-            change = ProductChange(**change_kwargs)
+            change = ProductChange(**change_kwargs)  # pyright: ignore[reportUnknownArgumentType]
             resp = await self.client.update_products(
                 project_id=self.selected_project_id,
                 product_ids=[
@@ -769,6 +787,10 @@ class PuzzleUploaderUI(QWidget):
         loop.stop()  # Останавливаем цикл событий asyncio
         if a0:
             a0.accept()  # Завершаем событие закрытия окна
+
+    def schedule_async(self, coro: Coroutine[Any, Any, None]) -> None:
+        """Schedule an async coroutine to run in the event loop."""
+        asyncio.ensure_future(coro)
 
 
 if __name__ == "__main__":
