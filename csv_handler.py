@@ -1,4 +1,11 @@
-"""CSV file handling and product tree structure."""
+"""Обработка CSV файлов и структура дерева продуктов.
+
+Модуль отвечает за:
+- Парсинг CSV файлов с данными продуктов
+- Валидацию данных с помощью Pydantic
+- Построение древовидной структуры продуктов и групп
+- Обработку изображений и метаданных продуктов
+"""
 
 import csv
 from datetime import datetime
@@ -8,16 +15,18 @@ import os
 from pydantic import BaseModel, ValidationError
 
 from puzzle.base_model import Upload
-from puzzle.enums import ProductKind, ProductStatusEnum
+from puzzle.enums import ProductStatusEnum
 
 
-# CSV example
+# Пример формата CSV файла:
 # path,code,awarded,due,picture,deliverable,status,tags
 # episode01/seq01,0010,10,21.06.2025,images/0010.png,TRUE,ACTIVE,tag1 tag2
 # episode01/seq01,0020,,,,,,
 
 
 class CsvRow(BaseModel):
+    """Модель для валидации строки CSV файла."""
+
     path: str
     code: str
     awarded: str
@@ -29,14 +38,18 @@ class CsvRow(BaseModel):
 
 
 class ParsedRow:
-    """Represents a parsed row from the CSV file."""
+    """Представляет распарсенную строку из CSV файла с валидированными и преобразованными данными."""
 
     def __init__(self, csv_row: CsvRow, csv_file_path: str):
         self.path = csv_row.path
         self.code = csv_row.code
+        # Преобразуем awarded в число
         self.awarded = int(csv_row.awarded) if csv_row.awarded else 0
+        # Парсим дату окончания
         self.due = self.parse_due_date(csv_row.due)
+        # Преобразуем флаг deliverable в булево значение
         self.deliverable = csv_row.deliverable == "TRUE"
+        # Преобразуем строковый статус в enum
         status_str = csv_row.status.strip().upper()
         if status_str == "" or status_str == "ACTIVE":
             self.status = ProductStatusEnum.ACTIVE
@@ -46,12 +59,14 @@ class ParsedRow:
             self.status = ProductStatusEnum.CANCELED
         else:
             self.status = ProductStatusEnum.ACTIVE
+        # Парсим теги из строки с разделителем-пробелом
         self.tags = [tag.strip() for tag in csv_row.tags.split(" ") if tag.strip()]
 
-        # Handle thumbnail (file upload)
+        # Обрабатываем thumbnail (загрузка файла изображения)
         picture_field = csv_row.picture.strip()
         image_path = None
         if picture_field:
+            # Формируем полный путь к изображению относительно CSV файла
             image_path = os.path.join(os.path.dirname(csv_file_path), picture_field)
             if os.path.exists(image_path):
                 logging.info(
@@ -77,7 +92,7 @@ class ParsedRow:
             thumbnail_upload = None
         self.thumbnail_upload = thumbnail_upload
 
-        # # Handle 'description' field
+        # # Обработка поля 'description' (закомментировано)
         # description_str = product_data.description
         # if description_str:
         #     try:
@@ -92,13 +107,13 @@ class ParsedRow:
 
     @staticmethod
     def parse_due_date(due_str: str):
-        """Parses the due date string to ISO format.
+        """Парсит строку даты окончания в формат ISO.
 
         Args:
-            due_str (str): The due date string in 'DD.MM.YYYY' format.
+            due_str (str): Строка даты в формате 'DD.MM.YY'.
 
         Returns:
-            str: The ISO formatted date string, or None if invalid.
+            str: Дата в ISO формате, или None если формат неверный.
         """
         try:
             due_date_obj = datetime.strptime(due_str, "%d.%m.%y")
@@ -109,22 +124,29 @@ class ParsedRow:
 
 
 class ProductGroupNode:
-    """Represents a group node in the product tree."""
+    """Представляет узел группы в дереве продуктов.
+
+    Группа используется для организации продуктов в иерархическую структуру.
+    Может содержать как продукты, так и другие группы.
+    """
 
     def __init__(self, csv_file_path: str, name: str):
         """
-        Initializes a ProductGroupNode.
+        Инициализирует узел группы продуктов.
 
         Args:
-            name (str): The name of the group node.
+            csv_file_path (str): Путь к CSV файлу.
+            name (str): Название группы.
         """
         self.name = name
-        self.kind = ProductKind.GROUP  # 'GROUP' node
         self.children: dict[str, ProductNode | ProductGroupNode] = {}
 
 
 class ProductNode:
-    """Represents a node in the product tree."""
+    """Представляет узел продукта в дереве.
+
+    Содержит все данные о продукте, включая метаданные и файлы.
+    """
 
     def __init__(
         self,
@@ -133,25 +155,25 @@ class ProductNode:
         product_data: CsvRow,
     ):
         """
-        Initializes a ProductTreeNode.
+        Инициализирует узел продукта.
 
         Args:
-            name (str): The name of the node.
-            kind (str): The kind of node ('GROUP' or 'PRODUCT').
-            product_data (dict, optional): The product data if it's a product node.
+            csv_file_path (str): Путь к CSV файлу.
+            name (str): Название продукта.
+            product_data (CsvRow): Данные продукта из CSV.
         """
         self.name = name
         self.product_data = ParsedRow(product_data, csv_file_path)
 
 
 def parse_csv_file(file_path: str) -> ProductGroupNode | None:
-    """Parses the CSV file and builds a product tree.
+    """Парсит CSV файл и строит дерево продуктов.
 
     Args:
-        file_path (str): The path to the CSV file.
+        file_path (str): Путь к CSV файлу.
 
     Returns:
-        ProductGroupNode: The root node of the product tree, or None if parsing fails.
+        ProductGroupNode: Корневой узел дерева продуктов, или None если парсинг не удался.
     """
     root = ProductGroupNode(file_path, "root")
     try:
@@ -161,7 +183,7 @@ def parse_csv_file(file_path: str) -> ProductGroupNode | None:
 
             for row in reader:
                 try:
-                    # validate and parse row using pydantic
+                    # Валидируем и парсим строку с помощью pydantic
                     csvRow = CsvRow(**row)  # pyright: ignore[reportArgumentType]
 
                     product_code = csvRow.code
@@ -169,17 +191,18 @@ def parse_csv_file(file_path: str) -> ProductGroupNode | None:
                         logging.warning("Skipping row with missing product code.")
                         continue
 
-                    # Build the path in the tree
+                    # Строим путь в дереве продуктов
                     path_parts = csvRow.path.split("/")
                     current_parent_node = root
 
+                    # Проходим по каждой части пути, создавая группы при необходимости
                     for part in path_parts:
                         if part not in current_parent_node.children:
                             next_parent = ProductGroupNode(file_path, part)
                             current_parent_node.children[part] = next_parent
                             current_parent_node = next_parent
 
-                    # Add the product node
+                    # Добавляем узел продукта в конец пути
                     if product_code not in current_parent_node.children:
                         current_parent_node.children[product_code] = ProductNode(
                             file_path,
