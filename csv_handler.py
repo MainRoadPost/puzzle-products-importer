@@ -110,17 +110,24 @@ class ParsedRow:
         """Парсит строку даты окончания в формат ISO.
 
         Args:
-            due_str (str): Строка даты в формате 'DD.MM.YY'.
+            due_str (str): Строка даты в форматах 'DD.MM.YYYY' или 'DD.MM.YY'.
 
         Returns:
             str: Дата в ISO формате, или None если формат неверный.
         """
-        try:
-            due_date_obj = datetime.strptime(due_str, "%d.%m.%y")
-            return due_date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
-        except ValueError:
-            logging.warning(f"Invalid date format for due date '{due_str}'.")
+        # Try parsing with four-digit year first, then with two-digit year
+        for fmt in ("%d.%m.%Y", "%d.%m.%y"):
+            try:
+                due_date_obj = datetime.strptime(due_str, fmt)
+                # Normalize to zero-time Zulu format
+                return due_date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+            except ValueError:
+                continue
+        if due_str.strip() == "":
+            # Empty due date is not an error; return None silently
             return None
+        logging.warning(f"Invalid date format for due date '{due_str}'.")
+        return None
 
 
 class ProductGroupNode:
@@ -201,6 +208,8 @@ def parse_csv_file(file_path: str) -> ProductGroupNode | None:
                             next_parent = ProductGroupNode(file_path, part)
                             current_parent_node.children[part] = next_parent
                             current_parent_node = next_parent
+                        else:
+                            current_parent_node = current_parent_node.children[part]
 
                     # Добавляем узел продукта в конец пути
                     if product_code not in current_parent_node.children:

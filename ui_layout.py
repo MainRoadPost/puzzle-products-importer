@@ -144,6 +144,11 @@ class PuzzleUploaderUI(QWidget):
         self.debug_mode_checkbox.stateChanged.connect(self.toggle_debug_mode)
         self.ui_layout.addWidget(self.debug_mode_checkbox)
 
+        # Чекбокс dry run режима
+        self.dry_run_checkbox = QCheckBox("Dry run")
+        self.dry_run_checkbox.setChecked(False)
+        self.ui_layout.addWidget(self.dry_run_checkbox)
+
         # Поле ввода GraphQL запроса
         self.graphql_request_label = QLabel("GraphQL Request:")
         self.graphql_request_input = QTextEdit()

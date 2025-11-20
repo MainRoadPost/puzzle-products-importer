@@ -3,6 +3,8 @@
 # Главный модуль приложения для импорта продуктов в систему Puzzle
 # Обеспечивает интеграцию UI и API для загрузки данных из CSV файлов
 
+import dotenv
+import os
 import sys
 import logging
 import asyncio
@@ -68,6 +70,14 @@ class PuzzleImporter:
             self.ui.domain_combo.addItem("No domain", None)
             for domain in response.domains:
                 self.ui.domain_combo.addItem(domain.name, domain.name)
+            if os.environ.get("PUZZLE_USER_DOMAIN"):
+                index = self.ui.domain_combo.findData(os.environ["PUZZLE_USER_DOMAIN"])
+                if index != -1:
+                    self.ui.domain_combo.setCurrentIndex(index)
+            if os.environ.get("PUZZLE_USERNAME"):
+                self.ui.login_input.setText(os.environ["PUZZLE_USERNAME"])
+            if os.environ.get("PUZZLE_PASSWORD"):
+                self.ui.password_input.setText(os.environ["PUZZLE_PASSWORD"])
             logging.info("Domain list updated.")
         except Exception as e:
             logging.error(f"Error fetching domains: {e}")
@@ -198,6 +208,8 @@ class PuzzleImporter:
 
         for child_name, child_node in root.children.items():
             self.ui.import_status_label.setText(f"Importing '{child_name}'...")
+            logging.info(f"Processing '{child_name}'...")
+            logging.debug(f"Child node details: {child_node}")
 
             # Проверяем, существует ли элемент с таким именем
             existing_item = await self.check_if_exists(
@@ -264,11 +276,17 @@ class PuzzleImporter:
             parentId=parent_id,
             code=node.name,
             kind=ProductKind.GROUP,
-            description={"ops": []},
+            description=None,
             tags=[],
         )
 
         try:
+            if self.ui.dry_run_checkbox.isChecked():
+                logging.debug(
+                    f"[Dry run] Prepared to create product group: {product_input}"
+                )
+                logging.info(f"[Dry run] Skipping creation of group '{node.name}'.")
+                return None
             response = await self.client.create_product_group(product_input)
             if response.product_create and response.product_create.id:
                 group_id = response.product_create.id
@@ -315,6 +333,10 @@ class PuzzleImporter:
 
         # Пытаемся создать продукт
         try:
+            if self.ui.dry_run_checkbox.isChecked():
+                logging.debug(f"[Dry run] Prepared to create product: {product_add}")
+                logging.info(f"[Dry run] Skipping creation of product '{node.name}'.")
+                return
             response = await self.client.create_product(product_add)
             if response.product_create and response.product_create.id:
                 product_id = response.product_create.id
@@ -347,6 +369,10 @@ class PuzzleImporter:
             return
 
         try:
+            if self.ui.dry_run_checkbox.isChecked():
+                logging.debug(f"[Dry run] Prepared to update product ID {existing_id}")
+                logging.info(f"[Dry run] Skipping update of product '{node.name}'.")
+                return
             # Подготавливаем изменения
             change = ProductChange(
                 status=node.product_data.status,
@@ -470,5 +496,9 @@ class PuzzleUploaderApp:
 
 
 if __name__ == "__main__":
+    dotenv.load_dotenv()
+    if os.environ.get("LOG_LEVEL"):
+        log_level = os.environ["LOG_LEVEL"].upper()
+        logging.getLogger().setLevel(getattr(logging, log_level, logging.INFO))
     app = PuzzleUploaderApp()
     sys.exit(app.run())
