@@ -30,3 +30,8 @@ type = "str"
 
 [tool.ariadne-codegen.scalars.Estimation]
 type = "int"
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.16.0",
+]

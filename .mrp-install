@@ -3,12 +3,12 @@
 
 #Returns current branch of git repo. Works only when PWD inside a repository
 function git.branch {
-  br=`git branch | grep "*"`
-  echo ${br/* /}
+  br=$(git branch | grep "\*")
+  echo "${br/* /}"
 }
 
 GIT_BRANCH=$(git.branch)
-if [ -z $GIT_BRANCH ]; then
+if [ -z "$GIT_BRANCH" ]; then
   echo "ERROR: No current branch found. Exitting."
   popd > /dev/null
   exit 1
@@ -16,6 +16,9 @@ fi
 MRP_REMOTE_BRANCH=$GIT_BRANCH
 
 MRP_INSTALL_PATH=/cg/tools/puzzle-products-importer
-mkdir -p $MRP_INSTALL_PATH
-MRP_SOURCE_PATH=$(pwd)
+mkdir -p "$MRP_INSTALL_PATH"
+MRP_SOURCE_PATH=$(pwd)/dist/puzzle-products-importer
 MRP_EXCLUDE_MASKS=".git* *.pyc .mrp-install .project .pydevproject .settings Makefile *.ui *.qrc doc config.dox .idea* .vscode README* .mypy_cache* .env* test.py queries.graphql schema.graphql pyproject.toml .graphqlrc.yml __pycache__"
+
+rm -rf build dist
+uv run pyinstaller --onedir --name puzzle-products-importer main.py
