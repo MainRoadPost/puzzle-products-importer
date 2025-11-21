@@ -26,11 +26,6 @@ from ui_layout import PuzzleUploaderUI
 from csv_handler import ProductNode, ProductGroupNode, parse_csv_file
 
 
-# URL API Puzzle (можно переключать между локальным и продакшн серверами)
-PUZZLE_API = "http://localhost:8000/api/graphql"
-# PUZZLE_API = "https://puzzle.mrpost.ru/api/graphql"
-# PUZZLE_API = "https://cubic.pzzle.ru/api/graphql"
-
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
 
@@ -459,8 +454,14 @@ class PuzzleUploaderApp:
         # Создаём UI
         self.ui = PuzzleUploaderUI(self.schedule_async)
 
+        # URL API Puzzle (можно переключать между локальным и продакшн серверами)
+        puzzle_api = "https://puzzle.mrpost.ru/api/graphql"
+        
+        if os.environ.get("PUZZLE_API"):
+            puzzle_api = os.environ["PUZZLE_API"]
+ 
         # Создаём импортер
-        self.importer = PuzzleImporter(PUZZLE_API, self.ui)
+        self.importer = PuzzleImporter(puzzle_api, self.ui)
 
         # Связываем сигналы UI с методами импортера
         self.connect_signals()

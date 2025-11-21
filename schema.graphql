@@ -93,20 +93,6 @@ type AuditUserTeam {
 }
 
 """
-Input for updating an audit team record
-"""
-input AuditUserTeamChange {
-  """
-  Optional new "until" date (record validity period end)
-  """
-  until: NaiveDate
-  """
-  Optional new team ID (None to set it to null, Some(None) to leave unchanged)
-  """
-  teamId: UUID
-}
-
-"""
 Base project structure element
 """
 interface Chunk {
@@ -127,9 +113,9 @@ interface Chunk {
   """
   title: String!
   """
-  Rich text description
+  Rich text description in markdown format
   """
-  description: Delta
+  description: String
   """
   Due date
   """
@@ -251,7 +237,7 @@ input ChunksChange {
   """
   Updated description
   """
-  description: Delta
+  description: String
   """
   Updated priority
   """
@@ -368,8 +354,6 @@ input DateRange {
   end: NaiveDate!
 }
 
-scalar Delta
-
 """
 Authentication domain for users
 """
@@ -425,9 +409,9 @@ type Epic implements Chunk {
   """
   title: String!
   """
-  Rich text description
+  Rich text description if present
   """
-  description: Delta
+  description: String
   """
   Direct estimation in hours
   """
@@ -527,9 +511,9 @@ input EpicAdd {
   """
   title: String!
   """
-  Detailed description of the epic in Delta format
+  Detailed description of the epic in markdown format
   """
-  description: Delta
+  description: String
   """
   Estimated time to complete in hours
   """
@@ -575,7 +559,7 @@ input EpicChange {
   """
   Updated epic description (use MaybeUndefined to distinguish between null and unchanged)
   """
-  description: Delta
+  description: String
   """
   Updated time estimation (use MaybeUndefined to distinguish between null and unchanged)
   """
@@ -629,7 +613,7 @@ type EpicGroup implements Chunk {
   """
   Rich text description if present
   """
-  description: Delta
+  description: String
   """
   Time estimation in minutes, if present
   """
@@ -717,9 +701,9 @@ input EpicGroupAdd {
   """
   title: String!
   """
-  Detailed description of the epic group in Delta format
+  Detailed description of the epic group in markdown format
   """
-  description: Delta
+  description: String
   """
   Priority level (higher numbers = higher priority)
   """
@@ -749,7 +733,7 @@ input EpicGroupChange {
   """
   Updated description (use MaybeUndefined to distinguish between null and unchanged)
   """
-  description: Delta
+  description: String
   """
   Updated priority level
   """
@@ -1233,15 +1217,6 @@ type Mutation {
   """
   logout: String!
   """
-  Creates a new user account
-  """
-  userCreate(
-    """
-    User creation data
-    """
-    data: UserAdd!
-  ): User!
-  """
   Updates an existing user account
   """
   userUpdate(
@@ -1254,59 +1229,6 @@ type Mutation {
     """
     change: UserChange!
   ): User!
-  """
-  Updates multiple users at once
-  """
-  usersUpdate(
-    """
-    List of user IDs to update
-    """
-    userIds: [UUID!]!
-    """
-    Common changes to apply to all users
-    """
-    change: UserCommonChange!
-  ): [User!]!
-  """
-  Permanently deletes users
-  """
-  usersDelete(
-    """
-    List of user IDs to permanently delete
-    """
-    userIds: [UUID!]!
-  ): Int!
-  """
-  Creates a new team
-  """
-  teamCreate(
-    """
-    The name for the new team, must be at least 2 characters and not contain special characters
-    """
-    name: String!
-  ): Team!
-  """
-  Updates an existing team
-  """
-  teamUpdate(
-    """
-    The UUID of the team to update
-    """
-    teamId: UUID!
-    """
-    The TeamChange object containing the fields to update
-    """
-    change: TeamChange!
-  ): Team!
-  """
-  Deletes multiple teams
-  """
-  teamsDelete(
-    """
-    A list of team UUIDs to delete
-    """
-    teamIds: [UUID!]!
-  ): Int!
   """
   Creates a new assignment linking a user to a task
   """
@@ -1834,36 +1756,6 @@ type Mutation {
     postCommentId: UUID
   ): Int!
   """
-  Updates a historical team assignment record
-  """
-  auditUserTeamUpdate(
-    """
-    ID of the user whose team assignment is being updated
-    """
-    userId: UUID!
-    """
-    The date until which this record was valid
-    """
-    until: NaiveDate!
-    """
-    Properties to update on the team assignment record
-    """
-    change: AuditUserTeamChange!
-  ): User!
-  """
-  Deletes a historical team assignment record
-  """
-  auditUserTeamDelete(
-    """
-    ID of the user whose team assignment is being deleted
-    """
-    userId: UUID!
-    """
-    The date until which this record was valid
-    """
-    until: NaiveDate!
-  ): User!
-  """
   Adds a reaction to a post
   """
   postAddReaction(
@@ -2077,9 +1969,9 @@ type Post {
   """
   projectId: UUID!
   """
-  Content in Delta format
+  Rich text description in markdown format
   """
-  description: Delta
+  description: String
   """
   Associated tags
   """
@@ -2147,9 +2039,9 @@ input PostAdd {
   """
   productIds: [UUID!]!
   """
-  Optional post description in Delta format
+  Optional post description in markdown format
   """
-  description: Delta
+  description: String
   """
   List of tags associated with the post
   """
@@ -2177,9 +2069,9 @@ input PostAddBlind {
   """
   productPaths: [String!]!
   """
-  Optional post description in Delta format
+  Optional post description in markdown format
   """
-  description: Delta
+  description: String
   """
   List of tags associated with the post
   """
@@ -2201,7 +2093,7 @@ input PostChange {
   """
   Updated post description
   """
-  description: Delta
+  description: String
   """
   Updated list of tags
   """
@@ -2245,9 +2137,9 @@ type PostComment {
   """
   mediaId: UUID
   """
-  Comment content in Delta format
+  Comment content in markdown format
   """
-  comment: Delta
+  comment: String
   """
   Additional metadata
   """
@@ -2299,9 +2191,9 @@ input PostCommentAdd {
   """
   mediaId: UUID
   """
-  Comment content in Delta format
+  Comment content in markdown format
   """
-  comment: Delta
+  comment: String
   """
   Additional structured metadata for the comment
   """
@@ -2321,9 +2213,9 @@ Input for updating an existing post comment
 """
 input PostCommentChange {
   """
-  New comment content in Delta format (use MaybeUndefined to distinguish between null and undefined)
+  New comment content in markdown format (use MaybeUndefined to distinguish between null and undefined)
   """
-  comment: Delta
+  comment: String
   """
   New structured metadata for the comment (use MaybeUndefined to distinguish between null and undefined)
   """
@@ -2565,9 +2457,9 @@ type Product {
   """
   kind: ProductKind!
   """
-  Rich text description in Delta format
+  Rich text description in markdown format
   """
-  description: Delta
+  description: String
   """
   Thumbnail image reference
   """
@@ -2675,9 +2567,9 @@ input ProductAdd {
   """
   kind: ProductKind!
   """
-  Optional detailed description of the product in Delta format
+  Optional detailed description of the product in markdown format
   """
-  description: Delta
+  description: String
   """
   Optional image file to use as product thumbnail
   """
@@ -2737,7 +2629,7 @@ input ProductChange {
   """
   Updated product description (use MaybeUndefined to distinguish between null and unchanged)
   """
-  description: Delta
+  description: String
   """
   New thumbnail image (use MaybeUndefined to distinguish between null and unchanged)
   """
@@ -2783,7 +2675,7 @@ input ProductCommonChange {
   """
   Updated product description (use MaybeUndefined to distinguish between null and unchanged)
   """
-  description: Delta
+  description: String
   """
   Optional deadline for the product
   """
@@ -2837,7 +2729,7 @@ input ProductGroupChange {
   """
   Updated product description (use MaybeUndefined to distinguish between null and unchanged)
   """
-  description: Delta
+  description: String
   """
   Optional deadline for the product
   """
@@ -3011,9 +2903,9 @@ type Project {
   """
   title: String!
   """
-  Rich text description in Delta format
+  Rich text description in markdown format
   """
-  description: Delta
+  description: String
   """
   Priority level of the project
   """
@@ -3111,7 +3003,7 @@ input ProjectAdd {
   """
   Rich text description of the project
   """
-  description: Delta
+  description: String
   """
   Priority level of the project
   """
@@ -3153,7 +3045,7 @@ input ProjectChange {
   """
   New project description (optional, can be set to null)
   """
-  description: Delta
+  description: String
   """
   New project priority
   """
@@ -4445,9 +4337,9 @@ type Sprint {
   """
   title: String!
   """
-  Description in Delta format
+  Rich text description in markdown format
   """
-  description: Delta
+  description: String
   """
   Progress percentage toward completion from 0.0 to 100.0
   """
@@ -4523,9 +4415,9 @@ input SprintAdd {
   """
   title: String!
   """
-  Optional detailed description of the sprint in Delta format
+  Optional detailed description of the sprint in markdown format
   """
-  description: Delta
+  description: String
   """
   Completion progress of the sprint as a percentage (0.0 to 1.0)
   """
@@ -4571,7 +4463,7 @@ input SprintChange {
   """
   New description for the sprint
   """
-  description: Delta
+  description: String
   """
   New progress value for the sprint
   """
@@ -4906,9 +4798,9 @@ type Task implements Chunk {
   """
   title: String!
   """
-  Rich text description
+  Rich text description if present
   """
-  description: Delta
+  description: String
   """
   Estimated effort
   """
@@ -5012,9 +4904,9 @@ input TaskAdd {
   """
   title: String!
   """
-  Detailed description of the task in Delta format
+  Detailed description of the task in markdown format
   """
-  description: Delta
+  description: String
   """
   Estimated time to complete in hours
   """
@@ -5092,7 +4984,7 @@ input TaskChange {
   """
   Updated task description (use MaybeUndefined to distinguish between null and unchanged)
   """
-  description: Delta
+  description: String
   """
   Updated time estimation (use MaybeUndefined to distinguish between null and unchanged)
   """
@@ -5146,7 +5038,7 @@ type TaskGroup implements Chunk {
   """
   Rich text description if present
   """
-  description: Delta
+  description: String
   """
   Time estimation in minutes, if present
   """
@@ -5232,7 +5124,7 @@ input TaskGroupAdd {
   """
   Optional rich text description of the task group
   """
-  description: Delta
+  description: String
   """
   Optional priority value for ordering (lower values have higher priority)
   """
@@ -5262,7 +5154,7 @@ input TaskGroupChange {
   """
   Optional new rich text description for the task group
   """
-  description: Delta
+  description: String
   """
   Optional new priority value
   """
@@ -5327,24 +5219,6 @@ type Team {
   Deletion timestamp
   """
   deletedAt: Timestamp
-}
-
-"""
-Input data for updating an existing team
-"""
-input TeamChange {
-  """
-  New name for the team (optional)
-  """
-  name: String
-  """
-  Whether the team should be marked as deleted (optional)
-  """
-  isDeleted: Boolean
-  """
-  New list of user IDs that should belong to this team (optional)
-  """
-  users: [UUID!]
 }
 
 """
@@ -5459,52 +5333,6 @@ type User {
 }
 
 """
-Input type for creating a new user
-"""
-input UserAdd {
-  """
-  Company ID to associate the user with
-  """
-  companyId: Int!
-  """
-  User's first name (optional)
-  """
-  givenName: String
-  """
-  User's last name (optional)
-  """
-  familyName: String
-  """
-  Username for authentication
-  """
-  login: String!
-  """
-  Password for authentication (not stored directly)
-  """
-  password: String!
-  """
-  List of roles to assign to the user
-  """
-  roles: [UserRole!]!
-  """
-  Optional avatar image for the user
-  """
-  avatar: Upload
-  """
-  Optional team ID to associate the user with
-  """
-  teamId: UUID
-  """
-  User's timezone in IANA format
-  """
-  timezone: String!
-  """
-  List of tags to associate with the user
-  """
-  tags: [String!]!
-}
-
-"""
 Oneof for different ways to identify a user.
 """
 input UserBy @oneOf {
@@ -5548,32 +5376,6 @@ input UserChange {
   avatar: Upload
   """
   Flag to mark user as deleted or active
-  """
-  isDeleted: Boolean
-  """
-  Updated team association (undefined means no change, null means remove association)
-  """
-  teamId: UUID
-  """
-  Updated timezone (null means no change)
-  """
-  timezone: String
-  """
-  Updated tags (null means no change)
-  """
-  tags: StringsUpdate
-}
-
-"""
-Input type for bulk updating multiple users
-"""
-input UserCommonChange {
-  """
-  Updated roles (null means no change)
-  """
-  roles: UserRolesUpdate
-  """
-  Flag to mark users as deleted or active
   """
   isDeleted: Boolean
   """
