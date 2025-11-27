@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# Главный модуль приложения для импорта продуктов в систему Puzzle
-# Обеспечивает интеграцию UI и API для загрузки данных из CSV файлов
+# Main module for the Puzzle products importer application
+# Integrates UI and API logic to upload data from CSV files
 
 import dotenv
 import os
@@ -15,22 +15,22 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5 import QtGui
 from qasync import QEventLoop, asyncSlot  # pyright: ignore[reportMissingTypeStubs, reportUnknownVariableType]
 
-# Импортируем асинхронный клиент Puzzle и связанные классы
+# Import the async Puzzle client and related classes
 from puzzle.client import Client, ProductAdd, ProductChange
 from puzzle.enums import ProductKind
 from puzzle.exceptions import GraphQLClientGraphQLError, GraphQLClientHttpError
 from puzzle.input_types import StringsUpdate
 
-# Импортируем локальные модули
+# Import local modules
 from ui_layout import PuzzleUploaderUI
 from csv_handler import ProductNode, ProductGroupNode, parse_csv_file
 
 
-# Настройка логирования
+# Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
 
 
-# TypedDict для описания существующего элемента в системе
+# TypedDict describing an existing item in the system
 class ExistingItem(TypedDict):
     kind: str
     id: str
@@ -39,14 +39,14 @@ class ExistingItem(TypedDict):
 
 
 class PuzzleImporter:
-    """Обрабатывает взаимодействие с Puzzle API для импорта продуктов.
+    """Handles interactions with the Puzzle API to import products.
 
-    Класс отвечает за:
-    - Авторизацию в системе Puzzle
-    - Получение списка доменов и проектов
-    - Импорт продуктов из CSV файлов
-    - Обновление существующих продуктов
-    - Создание групп и продуктов через GraphQL API
+    Responsibilities include:
+    - Authenticating to Puzzle
+    - Fetching available domains and projects
+    - Importing products from CSV files
+    - Updating existing products
+    - Creating groups and products using GraphQL
     """
 
     def __init__(self, api_url: str, ui: PuzzleUploaderUI):
@@ -58,7 +58,7 @@ class PuzzleImporter:
 
     @asyncSlot()
     async def get_domains(self):
-        """Получает список доменов через GraphQL клиент."""
+        """Fetch the list of domains using the GraphQL client."""
         try:
             response = await self.client.get_domains()
             self.ui.domain_combo.clear()
@@ -80,12 +80,12 @@ class PuzzleImporter:
 
     @asyncSlot()
     async def attempt_login(self):
-        """Выполняет попытку входа в систему используя GraphQL клиент."""
+        """Attempt to log in using the GraphQL client."""
         domain_name = self.ui.domain_combo.currentData()
         username = self.ui.login_input.text().strip()
         password = self.ui.password_input.text()
 
-        # Проверяем наличие всех необходимых данных
+        # Verify required credentials are present
         if not all([username, password]):
             self.ui.login_status_label.setText(
                 "Please provide domain, login, and password."
@@ -104,7 +104,7 @@ class PuzzleImporter:
 
             if response.login:
                 logging.info("Login successful.")
-                # Клиент автоматически управляет сессией и cookies
+                # The client manages session and cookies automatically
                 self.ui.login_status_label.setText(
                     "Login successful. Fetching projects..."
                 )
@@ -118,11 +118,11 @@ class PuzzleImporter:
 
     @asyncSlot()
     async def fetch_projects(self):
-        """Получает список проектов используя GraphQL клиент."""
+        """Fetch the list of projects using the GraphQL client."""
         try:
             response = await self.client.get_projects()
             if response.projects:
-                # Фильтруем только активные проекты (не завершённые)
+                # Filter only active (not completed) projects
                 active_projects = [p for p in response.projects if p.done_at is None]
 
                 self.ui.project_combo.clear()
@@ -147,7 +147,7 @@ class PuzzleImporter:
 
     @asyncSlot()
     async def start_import(self):
-        """Запускает процесс импорта при нажатии кнопки импорта."""
+        """Start the import process when the import button is pressed."""
         self.csv_file_path = self.ui.csv_file_path
         if not self.csv_file_path:
             self.ui.import_status_label.setText(
@@ -168,10 +168,10 @@ class PuzzleImporter:
         logging.info(f"Selected project ID: {self.selected_project_id}")
         self.ui.import_status_label.setText("Import started...")
 
-        # Сохраняем режим обновления (update mode)
+        # Save the update mode setting
         self.update_mode = self.ui.update_mode_checkbox.isChecked()
 
-        # Парсим CSV файл
+        # Parse the CSV file
         root_node = parse_csv_file(self.csv_file_path)
 
         if root_node:
@@ -180,7 +180,7 @@ class PuzzleImporter:
                 "CSV parsed successfully. Starting import..."
             )
 
-            # Генерируем и выполняем mutation запросы
+            # Generate and execute GraphQL mutation queries
             await self.generate_mutation_queries(root_node)
             self.ui.import_status_label.setText("Import completed successfully.")
             logging.info("Import completed successfully.")
@@ -191,11 +191,11 @@ class PuzzleImporter:
     async def generate_mutation_queries(
         self, root: ProductGroupNode, parent_id: str | None = None
     ):
-        """Рекурсивно генерирует и выполняет mutation запросы.
+        """Recursively generate and execute GraphQL mutation queries.
 
         Args:
-            root (ProductGroupNode): Корневой узел дерева продуктов.
-            parent_id (str, optional): ID родительского узла в API.
+            root (ProductGroupNode): Root node of the product tree.
+            parent_id (str, optional): ID of the parent item in the API.
         """
         if self.selected_project_id is None:
             logging.error("No project selected for import.")
@@ -206,25 +206,25 @@ class PuzzleImporter:
             logging.info(f"Processing '{child_name}'...")
             logging.debug(f"Child node details: {child_node}")
 
-            # Проверяем, существует ли элемент с таким именем
+            # Check if an item with this name already exists
             existing_item = await self.check_if_exists(
                 self.selected_project_id, child_name, parent_id
             )
 
             if existing_item:
-                # Определяем ожидаемый тип элемента
+                # Determine the expected item kind
                 child_kind = (
                     ProductKind.GROUP
                     if isinstance(child_node, ProductGroupNode)
                     else ProductKind.PRODUCT
                 )
-                # Проверяем соответствие типов
+                # Validate the kind of existing item
                 if existing_item["kind"] != child_kind:
                     logging.warning(
                         f"Conflict: '{child_name}' is a {existing_item['kind']} but expected {child_kind}."
                     )
                     continue
-                # В режиме обновления обновляем продукт
+                # When update mode is enabled, update the product
                 if self.update_mode and isinstance(child_node, ProductNode):
                     await self.update_product(child_node, existing_item["id"])
                     continue
@@ -232,7 +232,7 @@ class PuzzleImporter:
                     logging.info(
                         f"{child_name} already exists as {child_kind}. Skipping creation."
                     )
-                    # Для групп рекурсивно обрабатываем дочерние элементы
+                    # For groups, process child nodes recursively
                     if isinstance(child_node, ProductGroupNode):
                         await self.generate_mutation_queries(
                             child_node, existing_item["id"]
@@ -240,27 +240,27 @@ class PuzzleImporter:
                     continue
 
             if isinstance(child_node, ProductGroupNode):
-                # Создаём группу продуктов
+                # Create a product group
                 new_parent_id = await self.create_product_group(child_node, parent_id)
                 if new_parent_id:
                     await self.generate_mutation_queries(
                         child_node, parent_id=new_parent_id
                     )
             else:
-                # Создаём продукт
+                # Create a product
                 await self.create_product(child_node, parent_id)
 
     ####
 
     async def create_product_group(self, node: ProductGroupNode, parent_id: str | None):
-        """Создаёт группу продуктов через GraphQL mutation.
+        """Create a product group via a GraphQL mutation.
 
         Args:
-            node (ProductGroupNode): Узел, представляющий группу продуктов.
-            parent_id (str): ID родительского узла.
+            node (ProductGroupNode): Node representing the group.
+            parent_id (str): ID of the parent node.
 
         Returns:
-            str: ID новой созданной группы, или None если создание не удалось.
+            str: ID of the created group, or None if creation failed.
         """
         if self.selected_project_id is None:
             logging.error("No project selected for creating product group.")
@@ -297,11 +297,11 @@ class PuzzleImporter:
             return None
 
     async def create_product(self, node: ProductNode, parent_id: str | None):
-        """Создаёт продукт через GraphQL mutation.
+        """Create a product via a GraphQL mutation.
 
         Args:
-            node (ProductNode): Узел, представляющий продукт.
-            parent_id (str): ID родительского узла.
+            node (ProductNode): Node representing the product.
+            parent_id (str): ID of the parent node.
         """
         if self.selected_project_id is None:
             logging.error("No project selected for creating product.")
@@ -311,7 +311,7 @@ class PuzzleImporter:
             logging.warning("No csv file selected, skipping")
             return
 
-        # Подготавливаем данные продукта для создания
+        # Prepare product input for creation
         product_add = ProductAdd(
             projectId=self.selected_project_id,
             parentId=parent_id,
@@ -326,7 +326,7 @@ class PuzzleImporter:
             tags=node.product_data.tags,
         )
 
-        # Пытаемся создать продукт
+        # Try to create the product
         try:
             if self.ui.dry_run_checkbox.isChecked():
                 logging.debug(f"[Dry run] Prepared to create product: {product_add}")
@@ -349,11 +349,11 @@ class PuzzleImporter:
             )
 
     async def update_product(self, node: ProductNode, existing_id: str):
-        """Обновляет существующий продукт через GraphQL mutation.
+        """Update an existing product using a GraphQL mutation.
 
         Args:
-            node (ProductNode): Узел с новыми данными продукта.
-            existing_id (str): ID существующего продукта.
+            node (ProductNode): Node containing updated product data.
+            existing_id (str): ID of the existing product.
         """
         if self.selected_project_id is None:
             logging.error("No project selected for updating product.")
@@ -368,7 +368,7 @@ class PuzzleImporter:
                 logging.debug(f"[Dry run] Prepared to update product ID {existing_id}")
                 logging.info(f"[Dry run] Skipping update of product '{node.name}'.")
                 return
-            # Подготавливаем изменения
+            # Prepare the changes for update
             change = ProductChange(
                 status=node.product_data.status,
                 dueDate=node.product_data.due,
@@ -377,7 +377,7 @@ class PuzzleImporter:
                 thumbnail=node.product_data.thumbnail_upload,
                 tags=StringsUpdate(set=node.product_data.tags),
             )
-            # Обновляем продукт (один продукт за раз для корректной передачи изображения)
+            # Update the product (single product update to handle file uploads correctly)
             resp = await self.client.update_products(
                 project_id=self.selected_project_id,
                 product_ids=[existing_id],
@@ -391,14 +391,14 @@ class PuzzleImporter:
     async def check_if_exists(
         self, project_id: str, code: str, parent_id: str | None
     ) -> ExistingItem | None:
-        """Проверяет, существует ли продукт или группа с заданным кодом.
+        """Check whether a product or group with the given code exists.
 
         Args:
-            code (str): Код продукта или группы.
-            parent_id (str): ID родительского узла.
+            code (str): Code of the product or group.
+            parent_id (str): ID of the parent node.
 
         Returns:
-            dict: Данные существующего элемента если найден, иначе None.
+            dict: Details of the existing item if found; otherwise None.
         """
         logging.info(f"Checking if '{code}' exists under parent {parent_id or 'root'}.")
 
@@ -427,50 +427,50 @@ class PuzzleImporter:
             logging.error(f"Error checking existence of '{code}': {e}")
             return None
 
-    # Переопределяем обработчик закрытия окна
+    # Override close event handler
     def closeEvent(self, a0: QtGui.QCloseEvent | None) -> None:
-        """Обработчик события закрытия окна приложения."""
-        logging.info("Окно закрывается, останавливаем event loop...")
+        """Handle the application window close event."""
+        logging.info("Window is closing, stopping the event loop...")
         loop = asyncio.get_event_loop()
-        loop.stop()  # Останавливаем цикл событий asyncio
+        loop.stop()  # Stop the asyncio event loop
         if a0:
-            a0.accept()  # Завершаем событие закрытия окна
+            a0.accept()  # Accept the close event
 
     def schedule_async(self, coro: Coroutine[Any, Any, None]) -> None:
-        """Планирует выполнение асинхронной корутины в event loop."""
+        """Schedule an async coroutine to run on the event loop."""
         asyncio.ensure_future(coro)
 
 
 class PuzzleUploaderApp:
-    """Главный класс приложения, связывающий UI и импортер."""
+    """Top-level application class, bridging UI and the importer."""
 
     def __init__(self):
         self.app = QApplication(sys.argv)
 
-        # Создаём event loop
+        # Create the event loop
         self.loop = QEventLoop(self.app)
         asyncio.set_event_loop(self.loop)
 
-        # Создаём UI
+        # Create the UI
         self.ui = PuzzleUploaderUI(self.schedule_async)
 
-        # URL API Puzzle (можно переключать между локальным и продакшн серверами)
+        # Puzzle API URL (can be switched to local or production servers)
         puzzle_api = "https://puzzle.mrpost.ru/api/graphql"
-        
+
         if os.environ.get("PUZZLE_API"):
             puzzle_api = os.environ["PUZZLE_API"]
- 
-        # Создаём импортер
+
+        # Create the importer
         self.importer = PuzzleImporter(puzzle_api, self.ui)
 
-        # Связываем сигналы UI с методами импортера
+        # Connect UI signals to importer methods
         self.connect_signals()
 
-        # Инициализация - загружаем список доменов
+        # Initialization: load domain list
         self.schedule_async(self.importer.get_domains())
 
     def connect_signals(self):
-        """Связывает клики по кнопкам UI с методами импортера."""
+        """Connect UI button clicks to importer methods."""
         self.ui.login_button.clicked.connect(
             lambda: self.schedule_async(self.importer.attempt_login())
         )
@@ -480,11 +480,11 @@ class PuzzleUploaderApp:
         )
 
     def schedule_async(self, coro: Coroutine[Any, Any, None]) -> None:
-        """Планирует выполнение асинхронной корутины в event loop."""
+        """Schedule async coroutine execution on the event loop."""
         asyncio.ensure_future(coro)
 
     def run(self):
-        """Запускает приложение."""
+        """Run the application."""
         self.ui.show()
 
         with self.loop:
