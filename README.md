@@ -26,13 +26,13 @@ Next, choose a CSV file to import. You can create this file in Excel or any spre
 
 | path             | code  | awarded | due        | picture          | deliverable | status  | tags      |
 |------------------|-------|---------|------------|------------------|-------------|---------|-----------|
-| episode01/seq01  | 0010  | 10      | 21.06.2025 | images/0010.png  | TRUE        | ACTIVE  | tag1 tag2 |
+| episode01/seq01  | 0010  | 10      | 2025-11-26 | images/0010.png  | TRUE        | ACTIVE  | tag1 tag2 |
 | episode01/seq01  | 0020  |         |            |                  |             |         |           |
 
 -- The `path` column should contain the hierarchy of nested product groups for the product separated by slashes (`/`).
 -- `code` is the product name/id that will be used on the server.
 -- `awarded` is the number of allocated resources for the shot in person-hours.
--- `due` is the product deadline in format DD.MM.YYYY.
+-- `due` is the product deadline in format YYYY-MM-DD.
 -- `picture` is the path to the product preview image (should be 256×256 pixels square).
 -- `deliverable` indicates whether the product is delivered to the client; values can be `TRUE` or `FALSE`.
 -- `status` is the product status; allowed values are `ACTIVE`, `COMPLETED`, or `CANCELED`.
