@@ -93,6 +93,20 @@ type AuditUserTeam {
 }
 
 """
+Input for updating an audit team record
+"""
+input AuditUserTeamChange {
+  """
+  Optional new "until" date (record validity period end)
+  """
+  until: NaiveDate
+  """
+  Optional new team ID (None to set it to null, Some(None) to leave unchanged)
+  """
+  teamId: UUID
+}
+
+"""
 Base project structure element
 """
 interface Chunk {
@@ -591,11 +605,46 @@ input EpicChange {
 }
 
 """
-GraphQL object implementation for EpicGroup
+Epic status values
 """
-type EpicGroup implements Chunk {
+enum EpicStatusEnum {
   """
-  Project this epic group belongs to
+  Not yet scheduled
+  """
+  BACKLOG
+  """
+  Scheduled for work
+  """
+  TODO
+  """
+  Currently active
+  """
+  WIP
+  """
+  Temporarily blocked
+  """
+  HOLD
+  """
+  Completed
+  """
+  DONE
+  """
+  Will not be implemented
+  """
+  OMIT
+}
+
+"""
+Represents Int32 (only positive part, used for time estimations)
+"""
+scalar Estimation
+
+"""
+GraphQL object implementation for Group
+"""
+type Group implements Chunk {
+  """
+  Project this group belongs to
   """
   projectId: UUID!
   """
@@ -607,7 +656,7 @@ type EpicGroup implements Chunk {
   """
   parentId: UUID
   """
-  Title of this epic group
+  Title of this group
   """
   title: String!
   """
@@ -685,11 +734,11 @@ type EpicGroup implements Chunk {
 }
 
 """
-Input for creating a new epic group
+Input for creating a new group
 """
-input EpicGroupAdd {
+input GroupAdd {
   """
-  UUID of the project this epic group belongs to
+  UUID of the project this group belongs to
   """
   projectId: UUID!
   """
@@ -697,11 +746,11 @@ input EpicGroupAdd {
   """
   parentId: UUID
   """
-  Title or name of the epic group
+  Title or name of the group
   """
   title: String!
   """
-  Detailed description of the epic group in markdown format
+  Detailed description of the group in markdown format
   """
   description: String
   """
@@ -709,7 +758,7 @@ input EpicGroupAdd {
   """
   priority: Int
   """
-  Due date for the epic group
+  Due date for the group
   """
   dueDate: NaiveDate
   """
@@ -719,9 +768,9 @@ input EpicGroupAdd {
 }
 
 """
-Input for updating existing epic groups
+Input for updating existing groups
 """
-input EpicGroupChange {
+input GroupChange {
   """
   New parent ID (use MaybeUndefined to distinguish between null and unchanged)
   """
@@ -747,41 +796,6 @@ input EpicGroupChange {
   """
   estimation: Int
 }
-
-"""
-Epic status values
-"""
-enum EpicStatusEnum {
-  """
-  Not yet scheduled
-  """
-  BACKLOG
-  """
-  Scheduled for work
-  """
-  TODO
-  """
-  Currently active
-  """
-  WIP
-  """
-  Temporarily blocked
-  """
-  HOLD
-  """
-  Completed
-  """
-  DONE
-  """
-  Will not be implemented
-  """
-  OMIT
-}
-
-"""
-Represents Int32 (only positive part, used for time estimations)
-"""
-scalar Estimation
 
 """
 Represents a mapping of reaction types to lists of user IDs
@@ -1217,6 +1231,15 @@ type Mutation {
   """
   logout: String!
   """
+  Creates a new user account
+  """
+  userCreate(
+    """
+    User creation data
+    """
+    data: UserAdd!
+  ): User!
+  """
   Updates an existing user account
   """
   userUpdate(
@@ -1229,6 +1252,59 @@ type Mutation {
     """
     change: UserChange!
   ): User!
+  """
+  Updates multiple users at once
+  """
+  usersUpdate(
+    """
+    List of user IDs to update
+    """
+    userIds: [UUID!]!
+    """
+    Common changes to apply to all users
+    """
+    change: UserCommonChange!
+  ): [User!]!
+  """
+  Permanently deletes users
+  """
+  usersDelete(
+    """
+    List of user IDs to permanently delete
+    """
+    userIds: [UUID!]!
+  ): Int!
+  """
+  Creates a new team
+  """
+  teamCreate(
+    """
+    The name for the new team, must be at least 2 characters and not contain special characters
+    """
+    name: String!
+  ): Team!
+  """
+  Updates an existing team
+  """
+  teamUpdate(
+    """
+    The UUID of the team to update
+    """
+    teamId: UUID!
+    """
+    The TeamChange object containing the fields to update
+    """
+    change: TeamChange!
+  ): Team!
+  """
+  Deletes multiple teams
+  """
+  teamsDelete(
+    """
+    A list of team UUIDs to delete
+    """
+    teamIds: [UUID!]!
+  ): Int!
   """
   Creates a new assignment linking a user to a task
   """
@@ -1482,31 +1558,31 @@ type Mutation {
     productIds: [UUID!]!
   ): Int!
   """
-  Creates a new epic group
+  Creates a new group
   """
-  epicGroupCreate(
+  groupCreate(
     """
-    Data for the new epic group to be created
+    Data for the new group to be created
     """
-    chunkToAdd: EpicGroupAdd!
-  ): EpicGroup!
+    chunkToAdd: GroupAdd!
+  ): Group!
   """
-  Updates multiple epic groups at once
+  Updates multiple groups at once
   """
-  epicGroupsUpdate(
+  groupsUpdate(
     """
-    UUID of the project containing the epic groups
+    UUID of the project containing the groups
     """
     projectId: UUID!
     """
-    List of epic group IDs to update
+    List of group IDs to update
     """
     chunkIds: [UUID!]!
     """
-    Changes to apply to all specified epic groups
+    Changes to apply to all specified groups
     """
-    change: EpicGroupChange!
-  ): [EpicGroup!]!
+    change: GroupChange!
+  ): [Group!]!
   """
   Creates a new epic
   """
@@ -1533,32 +1609,6 @@ type Mutation {
     """
     change: EpicChange!
   ): [Epic!]!
-  """
-  Creates a new TaskGroup
-  """
-  taskGroupCreate(
-    """
-    Data for the new TaskGroup
-    """
-    chunkToAdd: TaskGroupAdd!
-  ): TaskGroup!
-  """
-  Updates multiple TaskGroups
-  """
-  taskGroupsUpdate(
-    """
-    ID of the project containing the task groups
-    """
-    projectId: UUID!
-    """
-    List of TaskGroup IDs to update
-    """
-    chunkIds: [UUID!]!
-    """
-    Changes to apply to all specified TaskGroups
-    """
-    change: TaskGroupChange!
-  ): [TaskGroup!]!
   """
   Creates a new task in 'Backlog' status
   """
@@ -1755,6 +1805,36 @@ type Mutation {
     """
     postCommentId: UUID
   ): Int!
+  """
+  Updates a historical team assignment record
+  """
+  auditUserTeamUpdate(
+    """
+    ID of the user whose team assignment is being updated
+    """
+    userId: UUID!
+    """
+    The date until which this record was valid
+    """
+    until: NaiveDate!
+    """
+    Properties to update on the team assignment record
+    """
+    change: AuditUserTeamChange!
+  ): User!
+  """
+  Deletes a historical team assignment record
+  """
+  auditUserTeamDelete(
+    """
+    ID of the user whose team assignment is being deleted
+    """
+    userId: UUID!
+    """
+    The date until which this record was valid
+    """
+    until: NaiveDate!
+  ): User!
   """
   Adds a reaction to a post
   """
@@ -5016,160 +5096,6 @@ input TaskChange {
 }
 
 """
-GraphQL object implementation for TaskGroup type
-"""
-type TaskGroup implements Chunk {
-  """
-  Project ID this task group belongs to
-  """
-  projectId: UUID!
-  """
-  Unique identifier of this task group
-  """
-  id: UUID!
-  """
-  Parent ID if available
-  """
-  parentId: UUID
-  """
-  Title of this task group
-  """
-  title: String!
-  """
-  Rich text description if present
-  """
-  description: String
-  """
-  Time estimation in minutes, if present
-  """
-  estimation: Estimation
-  """
-  Sum of all estimations for this group and its descendants
-  """
-  estimationSum: Estimation!
-  """
-  Sum of all time spent on this group and its descendants
-  """
-  spentSum: Estimation!
-  """
-  Number of direct children
-  """
-  childrenCount: Int!
-  """
-  Depth level in chunk hierarchy, starting from 0
-  """
-  depth: Int!
-  """
-  Creation timestamp
-  """
-  createdAt: Timestamp!
-  """
-  Last update timestamp
-  """
-  updatedAt: Timestamp!
-  """
-  Priority value
-  """
-  priority: Int!
-  """
-  Deadline date, if present
-  """
-  dueDate: NaiveDate
-  """
-  Calculated status based on child tasks
-  """
-  calcTaskStatus: TaskStatusEnum
-  """
-  Project this task group belongs to
-  """
-  project: Project!
-  """
-  Parent chunk, if available
-  """
-  parent: Chunk
-  """
-  ID of user who created this task group
-  """
-  createdBy: UUID!
-  """
-  ID of user who last updated this task group
-  """
-  updatedBy: UUID!
-  """
-  User who created this task group
-  """
-  createdByUser: User!
-  """
-  User who last updated this task group
-  """
-  updatedByUser: User!
-}
-
-"""
-Input object for creating a new TaskGroup
-"""
-input TaskGroupAdd {
-  """
-  ID of the project this task group belongs to
-  """
-  projectId: UUID!
-  """
-  Optional parent ID if this is a nested task group
-  """
-  parentId: UUID
-  """
-  Title of the task group
-  """
-  title: String!
-  """
-  Optional rich text description of the task group
-  """
-  description: String
-  """
-  Optional priority value for ordering (lower values have higher priority)
-  """
-  priority: Int
-  """
-  Due date for the task group
-  """
-  dueDate: NaiveDate
-  """
-  Optional time estimation in minutes for this task group
-  """
-  estimation: Int
-}
-
-"""
-Input object for updating an existing TaskGroup
-"""
-input TaskGroupChange {
-  """
-  Optional new parent ID for reparenting the task group
-  """
-  parentId: UUID
-  """
-  Optional new title for the task group
-  """
-  title: String
-  """
-  Optional new rich text description for the task group
-  """
-  description: String
-  """
-  Optional new priority value
-  """
-  priority: Int
-  """
-  Updated deadline date (use MaybeUndefined to distinguish between null and unchanged)
-  """
-  dueDate: NaiveDate
-  """
-  Optional new time estimation in minutes
-  """
-  estimation: Int
-}
-
-"""
 Task status values
 """
 enum TaskStatusEnum {
@@ -5219,6 +5145,24 @@ type Team {
   Deletion timestamp
   """
   deletedAt: Timestamp
+}
+
+"""
+Input data for updating an existing team
+"""
+input TeamChange {
+  """
+  New name for the team (optional)
+  """
+  name: String
+  """
+  Whether the team should be marked as deleted (optional)
+  """
+  isDeleted: Boolean
+  """
+  New list of user IDs that should belong to this team (optional)
+  """
+  users: [UUID!]
 }
 
 """
@@ -5333,6 +5277,52 @@ type User {
 }
 
 """
+Input type for creating a new user
+"""
+input UserAdd {
+  """
+  Company ID to associate the user with
+  """
+  companyId: Int!
+  """
+  User's first name (optional)
+  """
+  givenName: String
+  """
+  User's last name (optional)
+  """
+  familyName: String
+  """
+  Username for authentication
+  """
+  login: String!
+  """
+  Password for authentication (not stored directly)
+  """
+  password: String!
+  """
+  List of roles to assign to the user
+  """
+  roles: [UserRole!]!
+  """
+  Optional avatar image for the user
+  """
+  avatar: Upload
+  """
+  Optional team ID to associate the user with
+  """
+  teamId: UUID
+  """
+  User's timezone in IANA format
+  """
+  timezone: String!
+  """
+  List of tags to associate with the user
+  """
+  tags: [String!]!
+}
+
+"""
 Oneof for different ways to identify a user.
 """
 input UserBy @oneOf {
@@ -5376,6 +5366,32 @@ input UserChange {
   avatar: Upload
   """
   Flag to mark user as deleted or active
+  """
+  isDeleted: Boolean
+  """
+  Updated team association (undefined means no change, null means remove association)
+  """
+  teamId: UUID
+  """
+  Updated timezone (null means no change)
+  """
+  timezone: String
+  """
+  Updated tags (null means no change)
+  """
+  tags: StringsUpdate
+}
+
+"""
+Input type for bulk updating multiple users
+"""
+input UserCommonChange {
+  """
+  Updated roles (null means no change)
+  """
+  roles: UserRolesUpdate
+  """
+  Flag to mark users as deleted or active
   """
   isDeleted: Boolean
   """

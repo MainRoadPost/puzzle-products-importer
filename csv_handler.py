@@ -120,7 +120,7 @@ class ParsedRow:
             try:
                 due_date_obj = datetime.strptime(due_str, fmt)
                 # Normalize to zero-time Zulu format
-                return due_date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+                return due_date_obj.strftime("%Y-%m-%d")
             except ValueError:
                 continue
         if due_str.strip() == "":
